@@ -1,0 +1,33 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type NotificationSubscription {
+  eventName: String!
+  telegramBot: Boolean!
+}
+
+type NotificationSettingsGql {
+  accountId: String!
+  subscriptions: NotificationSubscription!
+  subscriptionEvents: String!
+}
+
+type Query {
+  notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
+}
+
+type Mutation {
+  createNotificationSettingsToAccount(createNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
+  updateNotificationSettingsToAccount(updateNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
+}
+
+input NotificationSettingsGqlInput {
+  substrateAccountId: String!
+  subscriptions: [NotificationSubscriptionInputType!]!
+}
+
+input NotificationSubscriptionInputType {
+  eventName: String!
+  telegramBot: Boolean!
+}

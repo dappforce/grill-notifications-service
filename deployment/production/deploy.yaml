@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grill-notifications
+  name: grill-notifications
+  namespace: sub-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grill-notifications
+  template:
+    metadata:
+      labels:
+        app: grill-notifications
+      name: grill-notifications
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - grill-notifications
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - image: <IMAGE>
+        imagePullPolicy: IfNotPresent
+        name: grill-notifications
+        ports:
+        - containerPort: 3000
+        envFrom:
+          - configMapRef:
+              name: grill-notifications-env
+          - secretRef:
+              name: grill-notifications-secret
+      imagePullSecrets:
+      - name: dockerhub
+      restartPolicy: Always

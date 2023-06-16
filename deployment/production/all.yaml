@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grill-notifications
+  name: grill-notifications
+  namespace: sub-back
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: grill-notifications
+  type: ClusterIP
+
+---
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: grill-notifications
+    namespace: sub-back
+    annotations:
+      ingress.kubernetes.io/from-to-www-redirect: "true"
+      nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+      nginx.org/client-max-body-size: "10m"
+      nginx.org/client-max-body-size: "10m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+      nginx.ingress.kubernetes.io/client-max-body-size: "10m"
+
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: grill-notifications.subsocial.network
+        http:
+          paths:
+            - backend:
+                service:
+                  name: grill-notifications
+                  port:
+                    number: 3000
+              path: /
+              pathType: Prefix
+
+    tls:
+      - hosts:
+        - grill-notifications.subsocial.network
+        secretName: subsocial-ssl
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grill-notifications-env
+  namespace: sub-back
+data:
+  XSOCIAL_RPC_URL: "wss://xsocial.subsocial.network"
+  IPFS_NODE_URL: "https://ipfs.subsocial.network/"
+  IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"
+  BOT_PORT: "3000"
+  TG_NO_ADMIN_PROTECTION_STR: "false"
+  API_NO_ADMIN_PROTECTION_STR: "false"

@@ -1,0 +1,7 @@
+Dockerfile
+.dockerignore
+.git*
+deployment
+node_modules
+npm-debug.log
+dist
