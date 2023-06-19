@@ -1,16 +1,45 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository, Repository } from 'typeorm';
-import { xSocialConfig } from '../../../config';
+import { MongoRepository } from 'typeorm';
 import { AccountsLink } from '../typeorm/accountsLink.entity';
-import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
+import { CryptoUtils } from '../../../common/utils/crypto.util';
+import {
+  SignedMessage,
+  signedMessage,
+  SignedMessageAction
+} from '../dto/substreateTgAccountsLinkingMsg.dto';
+import { sortObj } from 'jsonabc';
+import { AccountsLinkingMessageTemplateGqlType } from '../graphql/accountsLinkingMessageTemplate.gql.type';
 
 @Injectable()
 export class AccountsLinkService {
   constructor(
     @InjectRepository(AccountsLink)
-    public accountsLinkRepository: MongoRepository<AccountsLink>
+    public accountsLinkRepository: MongoRepository<AccountsLink>,
+    public cryptoUtils: CryptoUtils
   ) {}
+
+  getTelegramBotMessage(
+    action: SignedMessageAction,
+    substrateAccount: string
+  ): AccountsLinkingMessageTemplateGqlType {
+    let tpl: SignedMessage = {
+      action: action,
+      signature: '',
+      substrateAccount:
+        this.cryptoUtils.substrateAddressToSubsocialFormat(substrateAccount),
+      payload: {
+        message:
+          `Link to Substrate account ${this.cryptoUtils.substrateAddressToHex(
+            substrateAccount
+          )} (in hex)`.replace(/\s/g, '_')
+      }
+    };
+
+    return {
+      messageTpl: JSON.stringify(tpl)
+    };
+  }
 
   async findAllActiveBySubstrateAccountId(id: string) {
     return await this.accountsLinkRepository.find({
@@ -92,13 +121,55 @@ export class AccountsLinkService {
     if (existingEntity) {
       existingEntity.active = true;
       await this.accountsLinkRepository.save(existingEntity);
+      console.log('Accounts are already linked');
     } else {
       await this.createAccountsLink({
         tgAccountId,
         substrateAccountId,
         active
       });
+      console.log('New accounts link has been created');
     }
+  }
+
+  async parseAndVerifySubstrateAccountFromSignature({
+    tgAccountId,
+    linkingMessage
+  }: {
+    tgAccountId: number;
+    linkingMessage: string;
+  }) {
+    let parsedMessage = null;
+    try {
+      console.log(linkingMessage);
+      parsedMessage = JSON.parse(linkingMessage);
+    } catch (e) {
+      throw new Error('Provided invalid message.'); // TODO add error handler
+    }
+    if (!parsedMessage) throw new Error(); // TODO add error handler
+
+    const messageValidation = signedMessage.safeParse(parsedMessage);
+
+    if (!messageValidation.success) {
+      throw new Error('Provided invalid message.'); // TODO add error handler
+    }
+
+    const { data } = messageValidation;
+
+    if (
+      !this.cryptoUtils.isValidSignature({
+        account: data.substrateAccount,
+        signature: data.signature,
+        message: JSON.stringify(sortObj(data.payload))
+      })
+    )
+      throw new Error('Signature is invalid.'); // TODO add error handler
+
+    await this.ensureAccountLink({
+      tgAccountId,
+      substrateAccountId: data.substrateAccount,
+      active: true
+    });
   }
 }
 

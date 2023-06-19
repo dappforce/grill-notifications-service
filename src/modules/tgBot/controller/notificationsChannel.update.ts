@@ -19,7 +19,7 @@ export class NotificationsChannel {
   //   console.log('ON new chat member');
   // }
 
-  @Command('login')
+  @Command('link')
   async onBlockCommand(
     @UpdateType() updateType: TelegrafUpdateType,
     @Ctx() ctx: Context

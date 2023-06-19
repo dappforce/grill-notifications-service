@@ -32,11 +32,11 @@ export class LinkAccountsScene {
     @Sender('username') userName: string,
     @Sender('id') userId: number
   ): Promise<string> {
-    let substrateAccountId = null;
+    let linkingMessage = null;
     let processingMessage = null;
-    substrateAccountId = ctx.state.command.args[0];
+    linkingMessage = ctx.state.command.args[0];
 
-    if (!substrateAccountId) {
+    if (!linkingMessage) {
       await ctx.reply(
         '⚠️ The account ID has not been provided along with the command.'
       );
@@ -51,10 +51,9 @@ export class LinkAccountsScene {
       ])
     );
 
-    await this.accountsLinkService.ensureAccountLink({
+    await this.accountsLinkService.parseAndVerifySubstrateAccountFromSignature({
       tgAccountId: userId,
-      substrateAccountId: substrateAccountId,
-      active: true
+      linkingMessage: linkingMessage
     });
 
     await ctx.deleteMessage(processingMessage.message_id);

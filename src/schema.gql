@@ -2,6 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountsLinkingMessageTemplateGql {
+  messageTpl: String!
+}
+
 type NotificationSubscription {
   eventName: String!
   telegramBot: Boolean!
@@ -15,6 +19,8 @@ type NotificationSettingsGql {
 
 type Query {
   notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
+  linkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  unlinkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
 }
 
 type Mutation {
