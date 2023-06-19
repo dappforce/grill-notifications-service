@@ -1,9 +1,10 @@
-import { Command, Ctx, Update, On } from 'nestjs-telegraf';
+import { Command, Ctx, Update, On, Start } from 'nestjs-telegraf';
 import { UpdateType as TelegrafUpdateType } from 'telegraf/typings/telegram-types';
 import { Context } from '../../../interfaces/context.interface';
 import { LINK_ACCOUNTS_SCENE_ID } from '../../../app.constants';
 import { UpdateType } from '../../../common/decorators/update-type.decorator';
 import { UseGuards } from '@nestjs/common';
+import { Markup } from 'telegraf';
 // import { AdminTgGuard } from '../../../common/guards/admin.tg.guard';
 
 @Update()
@@ -18,6 +19,20 @@ export class NotificationsChannel {
   // async onNewMember(@Ctx() ctx: Context) {
   //   console.log('ON new chat member');
   // }
+
+  @Start()
+  async onStart(
+    @UpdateType() updateType: TelegrafUpdateType,
+    @Ctx() ctx: Context
+  ) {
+    await ctx.reply(
+      `Let's rock! Go to your Profile settings in grill.chat application, find "Connect Telegram" button and copy 
+      Telegram bot linking message. Than give it to me and I'll link your Grill account with current Telegram account.`,
+      Markup.inlineKeyboard([
+        Markup.button.url('Go to Grill', `https://grill.chat`)
+      ])
+    );
+  }
 
   @Command('link')
   async onBlockCommand(
