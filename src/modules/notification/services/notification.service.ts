@@ -38,7 +38,7 @@ export class NotificationService {
 
     if (activeAccountsLinks.length === 0) return;
 
-    const accountNotificationData = new Map<string, AccountNotificationData>();
+    const accountNotificationData = new Map<number, AccountNotificationData>();
 
     for (const link of activeAccountsLinks) {
       let accNotificationSettings =
@@ -53,7 +53,7 @@ export class NotificationService {
               this.notificationSettingsService.getDefaultNotificationSubscriptions()
           });
       }
-      accountNotificationData.set(link.substrateAccountId, {
+      accountNotificationData.set(link.tgAccountId, {
         ...link,
         notificationSettings: accNotificationSettings
       });

@@ -11,6 +11,7 @@ import {
 import { AccountsLinkingMessageTemplateGqlType } from './accountsLinkingMessageTemplate.gql.type';
 import { AccountsLinkService } from '../services/accountsLink.service';
 import { SignedMessageAction } from '../dto/substreateTgAccountsLinkingMsg.dto';
+import { LinkedTgAccountsToSubstrateAccountGqlType } from './linkedTgAccountsToSubstrateAccount.gql.type';
 
 @Resolver((of) => AccountsLinkingMessageTemplateGqlType)
 export class AccountsLinkingGqlResolver {
@@ -20,7 +21,7 @@ export class AccountsLinkingGqlResolver {
   linkSubstrateTelegramAccountsMsg(
     @Args('substrateAccount') substrateAccount: string
   ) {
-    return this.accountsLinkService.getTelegramBotMessage(
+    return this.accountsLinkService.getTelegramBotLinkingMessage(
       SignedMessageAction.TELEGRAM_ACCOUNT_LINK,
       substrateAccount
     );
@@ -30,8 +31,17 @@ export class AccountsLinkingGqlResolver {
   unlinkSubstrateTelegramAccountsMsg(
     @Args('substrateAccount') substrateAccount: string
   ) {
-    return this.accountsLinkService.getTelegramBotMessage(
+    return this.accountsLinkService.getTelegramBotLinkingMessage(
       SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK,
+      substrateAccount
+    );
+  }
+
+  @Query(() => LinkedTgAccountsToSubstrateAccountGqlType)
+  linkedTgAccountsToSubstrateAccount(
+    @Args('substrateAccount') substrateAccount: string
+  ) {
+    return this.accountsLinkService.getActiveLinkedTgAccountsBySubstrateAccountWithDetails(
       substrateAccount
     );
   }

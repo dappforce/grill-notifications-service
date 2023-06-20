@@ -6,6 +6,17 @@ type AccountsLinkingMessageTemplateGql {
   messageTpl: String!
 }
 
+type TelegramAccountDetails {
+  id: Float!
+  userName: String!
+  firstName: String
+  lastName: String
+}
+
+type LinkedTgAccountsToSubstrateAccountGql {
+  telegramAccounts: [TelegramAccountDetails!]
+}
+
 type NotificationSubscription {
   eventName: String!
   telegramBot: Boolean!
@@ -21,6 +32,7 @@ type Query {
   notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
   linkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
   unlinkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  linkedTgAccountsToSubstrateAccount(substrateAccount: String!): LinkedTgAccountsToSubstrateAccountGql!
 }
 
 type Mutation {

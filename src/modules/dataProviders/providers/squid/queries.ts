@@ -2,7 +2,7 @@
 
 export const squidSubQueryNotifications = `
         subscription {
-          notifications(limit: 500, orderBy: activity_blockNumber_DESC) {
+          notifications(limit: 300, orderBy: activity_blockNumber_DESC) {
             id
             account {
               id

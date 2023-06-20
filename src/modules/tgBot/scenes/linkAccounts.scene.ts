@@ -53,6 +53,9 @@ export class LinkAccountsScene {
 
     await this.accountsLinkService.parseAndVerifySubstrateAccountFromSignature({
       tgAccountId: userId,
+      tgAccountUserName: userName,
+      tgAccountFirstName: firstName,
+      tgAccountLastName: lastName,
       linkingMessage: linkingMessage
     });
 

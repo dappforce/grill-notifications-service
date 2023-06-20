@@ -9,6 +9,15 @@ export class AccountsLink {
   tgAccountId: number;
 
   @Column()
+  tgAccountUserName: string;
+
+  @Column()
+  tgAccountFirstName: string;
+
+  @Column()
+  tgAccountLastName: string;
+
+  @Column()
   substrateAccountId: string;
 
   @Column()

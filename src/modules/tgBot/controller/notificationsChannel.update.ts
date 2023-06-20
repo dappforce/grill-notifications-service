@@ -5,10 +5,13 @@ import { LINK_ACCOUNTS_SCENE_ID } from '../../../app.constants';
 import { UpdateType } from '../../../common/decorators/update-type.decorator';
 import { UseGuards } from '@nestjs/common';
 import { Markup } from 'telegraf';
+import { xSocialConfig } from '../../../config';
 // import { AdminTgGuard } from '../../../common/guards/admin.tg.guard';
 
 @Update()
 export class NotificationsChannel {
+  constructor(private readonly xSocialConfig: xSocialConfig) {}
+
   // @On('message')
   // async onChatMessage(@Ctx() ctx: Context) {
   //   console.log('ON message');
@@ -29,17 +32,28 @@ export class NotificationsChannel {
       `Let's rock! Go to your Profile settings in grill.chat application, find "Connect Telegram" button and copy 
       Telegram bot linking message. Than give it to me and I'll link your Grill account with current Telegram account.`,
       Markup.inlineKeyboard([
-        Markup.button.url('Go to Grill', `https://grill.chat`)
+        Markup.button.url(
+          'Go to Grill',
+          this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF
+        )
       ])
     );
   }
 
-  @Command('link')
+  @Command('enable')
   async onBlockCommand(
     @UpdateType() updateType: TelegrafUpdateType,
     @Ctx() ctx: Context
   ): Promise<void> {
     await ctx.scene.enter(LINK_ACCOUNTS_SCENE_ID);
+  }
+
+  @Command('disable')
+  async onUnlinkCommand(
+    @UpdateType() updateType: TelegrafUpdateType,
+    @Ctx() ctx: Context
+  ): Promise<void> {
+    console.dir(ctx, { depth: null });
   }
   //
   // @Command('u')

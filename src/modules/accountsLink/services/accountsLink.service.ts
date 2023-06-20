@@ -10,6 +10,9 @@ import {
 } from '../dto/substreateTgAccountsLinkingMsg.dto';
 import { sortObj } from 'jsonabc';
 import { AccountsLinkingMessageTemplateGqlType } from '../graphql/accountsLinkingMessageTemplate.gql.type';
+import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
+import { ParseLinkingMessageInputDto } from '../dto/parseLinkingMessageInput.dto';
+import { LinkedTgAccountsToSubstrateAccountGqlType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
 
 @Injectable()
 export class AccountsLinkService {
@@ -19,7 +22,7 @@ export class AccountsLinkService {
     public cryptoUtils: CryptoUtils
   ) {}
 
-  getTelegramBotMessage(
+  getTelegramBotLinkingMessage(
     action: SignedMessageAction,
     substrateAccount: string
   ): AccountsLinkingMessageTemplateGqlType {
@@ -74,17 +77,43 @@ export class AccountsLinkService {
     });
   }
 
+  async getActiveLinkedTgAccountsBySubstrateAccountWithDetails(
+    substrateAccount: string
+  ): Promise<LinkedTgAccountsToSubstrateAccountGqlType> {
+    const links = await this.findAllActiveBySubstrateAccountId(
+      substrateAccount
+    );
+
+    return {
+      telegramAccounts: links.map(
+        ({
+          tgAccountId,
+          tgAccountUserName,
+          tgAccountFirstName,
+          tgAccountLastName
+        }) => ({
+          id: tgAccountId,
+          userName: tgAccountUserName,
+          firstName: tgAccountFirstName,
+          lastName: tgAccountLastName
+        })
+      )
+    };
+  }
+
   async createAccountsLink({
     tgAccountId,
+    tgAccountUserName,
+    tgAccountFirstName,
+    tgAccountLastName,
     substrateAccountId,
     active = true
-  }: {
-    tgAccountId: number;
-    substrateAccountId: string;
-    active: boolean;
-  }) {
+  }: EnsureAccountLinkInputDto) {
     const newAccountsLinkEntity = new AccountsLink();
     newAccountsLinkEntity.tgAccountId = tgAccountId;
+    newAccountsLinkEntity.tgAccountUserName = tgAccountUserName;
+    newAccountsLinkEntity.tgAccountFirstName = tgAccountFirstName;
+    newAccountsLinkEntity.tgAccountLastName = tgAccountLastName;
     newAccountsLinkEntity.substrateAccountId = substrateAccountId;
     newAccountsLinkEntity.active = active;
     newAccountsLinkEntity.createdAt = new Date();
@@ -95,13 +124,22 @@ export class AccountsLinkService {
 
   async ensureAccountLink({
     tgAccountId,
+    tgAccountUserName,
+    tgAccountFirstName,
+    tgAccountLastName,
     substrateAccountId,
     active = true
-  }: {
-    tgAccountId: number;
-    substrateAccountId: string;
-    active: boolean;
-  }) {
+  }: EnsureAccountLinkInputDto) {
+    // TODO this approach is actual in case when we want to provide support multiple linked TG accounts to one Substrate account.
+    // const allLinksForTgAccount = await this.findAllActiveByTgAccountId(
+    //   tgAccountId
+    // );
+    //
+    // for (const link of allLinksForTgAccount) {
+    //   link.active = false;
+    //   await this.accountsLinkRepository.save(link);
+    // }
+
     const existingEntity = await this.accountsLinkRepository.findOne({
       where: {
         tgAccountId: { $eq: tgAccountId },
@@ -109,11 +147,10 @@ export class AccountsLinkService {
       }
     });
 
-    const allLinksForTgAccount = await this.findAllActiveByTgAccountId(
-      tgAccountId
-    );
+    const allLinksForSubstrateAccount =
+      await this.findAllActiveBySubstrateAccountId(substrateAccountId);
 
-    for (const link of allLinksForTgAccount) {
+    for (const link of allLinksForSubstrateAccount) {
       link.active = false;
       await this.accountsLinkRepository.save(link);
     }
@@ -125,6 +162,9 @@ export class AccountsLinkService {
     } else {
       await this.createAccountsLink({
         tgAccountId,
+        tgAccountUserName,
+        tgAccountFirstName,
+        tgAccountLastName,
         substrateAccountId,
         active
       });
@@ -134,11 +174,11 @@ export class AccountsLinkService {
 
   async parseAndVerifySubstrateAccountFromSignature({
     tgAccountId,
+    tgAccountUserName,
+    tgAccountFirstName,
+    tgAccountLastName,
     linkingMessage
-  }: {
-    tgAccountId: number;
-    linkingMessage: string;
-  }) {
+  }: ParseLinkingMessageInputDto) {
     let parsedMessage = null;
     try {
       console.log(linkingMessage);
@@ -167,11 +207,11 @@ export class AccountsLinkService {
 
     await this.ensureAccountLink({
       tgAccountId,
+      tgAccountUserName,
+      tgAccountFirstName,
+      tgAccountLastName,
       substrateAccountId: data.substrateAccount,
       active: true
     });
   }
 }
-
-//3o4Gc6tvv2bR6jCvxoo9LckwSeWAq2ALG8WpgAipTY1WoWTG
-// 3rJYtZ8EbGtLqfibk96hCFBUJcHHYUwHMB32YzkjhG62oAmR - donations (block 4268534)
