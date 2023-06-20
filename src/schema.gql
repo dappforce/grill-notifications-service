@@ -23,7 +23,7 @@ type NotificationSubscription {
 }
 
 type NotificationSettingsGql {
-  accountId: String!
+  substrateAccountId: String!
   subscriptions: NotificationSubscription!
   subscriptionEvents: String!
 }

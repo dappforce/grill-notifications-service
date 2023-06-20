@@ -12,7 +12,7 @@ export class NotificationSubscription {
 @ObjectType('NotificationSettingsGql')
 export class NotificationSettingsGqlType {
   @Field({ nullable: false })
-  accountId: string;
+  substrateAccountId: string;
 
   @Field(() => NotificationSubscription)
   subscriptions: NotificationSubscription[];
