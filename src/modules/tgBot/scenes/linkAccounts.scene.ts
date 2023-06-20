@@ -30,8 +30,11 @@ export class LinkAccountsScene {
     @Sender('first_name') firstName: string,
     @Sender('last_name') lastName: string,
     @Sender('username') userName: string,
+    @Sender('phone_number') phoneNumber: string,
     @Sender('id') userId: number
   ): Promise<string> {
+
+    console.log('phoneNumber - ', phoneNumber)
     let linkingMessage = null;
     let processingMessage = null;
     linkingMessage = ctx.state.command.args[0];
@@ -51,13 +54,20 @@ export class LinkAccountsScene {
       ])
     );
 
-    await this.accountsLinkService.parseAndVerifySubstrateAccountFromSignature({
-      tgAccountId: userId,
-      tgAccountUserName: userName,
-      tgAccountFirstName: firstName,
-      tgAccountLastName: lastName,
-      linkingMessage: linkingMessage
-    });
+    const linkEntity =
+      await this.accountsLinkService.parseAndVerifySubstrateAccountFromSignature(
+        {
+          tgAccountId: userId,
+          tgAccountUserName: userName,
+          tgAccountFirstName: firstName,
+          tgAccountLastName: lastName,
+          tgAccountPhoneNumber: phoneNumber,
+          linkingMessage: linkingMessage
+        }
+      );
+
+    ctx.session.__scenes.state['linkedSubstrateAccount'] =
+      linkEntity.substrateAccountId;
 
     await ctx.deleteMessage(processingMessage.message_id);
     await ctx.scene.leave();
@@ -67,23 +77,24 @@ export class LinkAccountsScene {
   @Action('cancel_processing')
   async onStopCommand(@Ctx() ctx: Context): Promise<void> {
     await ctx.answerCbQuery();
+    delete ctx.session.__scenes.state['linkedSubstrateAccount'];
     if (ctx.session.__scenes.state['processingMessageId']) {
       await ctx.deleteMessage(
         ctx.session.__scenes.state['processingMessageId']
       );
       delete ctx.session.__scenes.state['processingMessageId'];
     }
-    if (ctx.session.__scenes.state['reasonSelectionMessage']) {
-      await ctx.deleteMessage(
-        ctx.session.__scenes.state['reasonSelectionMessage']
-      );
-      delete ctx.session.__scenes.state['reasonSelectionMessage'];
-    }
     await ctx.scene.leave();
   }
 
   @SceneLeave()
   async onSceneLeave(@Ctx() ctx: Context): Promise<void> {
-    await ctx.reply('Accounts linked');
+    if (ctx.session.__scenes.state['linkedSubstrateAccount']) {
+      await ctx.reply(
+        `✅ Account linked successfully with Grill account ${ctx.session.__scenes.state['linkedSubstrateAccount']}.`
+      );
+    } else {
+      await ctx.reply(`✅Accounts linked successfully.`);
+    }
   }
 }

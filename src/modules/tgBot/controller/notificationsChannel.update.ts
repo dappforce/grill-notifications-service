@@ -1,7 +1,10 @@
 import { Command, Ctx, Update, On, Start } from 'nestjs-telegraf';
 import { UpdateType as TelegrafUpdateType } from 'telegraf/typings/telegram-types';
 import { Context } from '../../../interfaces/context.interface';
-import { LINK_ACCOUNTS_SCENE_ID } from '../../../app.constants';
+import {
+  LINK_ACCOUNTS_SCENE_ID, LINK_STATUS_SCENE_ID,
+  UNLINK_ACCOUNTS_SCENE_ID
+} from '../../../app.constants';
 import { UpdateType } from '../../../common/decorators/update-type.decorator';
 import { UseGuards } from '@nestjs/common';
 import { Markup } from 'telegraf';
@@ -53,8 +56,17 @@ export class NotificationsChannel {
     @UpdateType() updateType: TelegrafUpdateType,
     @Ctx() ctx: Context
   ): Promise<void> {
-    console.dir(ctx, { depth: null });
+    await ctx.scene.enter(UNLINK_ACCOUNTS_SCENE_ID);
   }
+
+  @Command('link')
+  async onLinkStatusCommand(
+    @UpdateType() updateType: TelegrafUpdateType,
+    @Ctx() ctx: Context
+  ): Promise<void> {
+    await ctx.scene.enter(LINK_STATUS_SCENE_ID);
+  }
+
   //
   // @Command('u')
   // @UseGuards(AdminTgGuard)

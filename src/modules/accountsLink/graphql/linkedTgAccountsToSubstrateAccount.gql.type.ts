@@ -13,6 +13,9 @@ export class TelegramAccountDetails {
 
   @Field({ nullable: true })
   lastName: string;
+
+  @Field({ nullable: true })
+  phoneNumber: string;
 }
 
 @ObjectType('LinkedTgAccountsToSubstrateAccountGql')

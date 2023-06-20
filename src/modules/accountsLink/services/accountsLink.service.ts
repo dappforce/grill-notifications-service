@@ -90,12 +90,14 @@ export class AccountsLinkService {
           tgAccountId,
           tgAccountUserName,
           tgAccountFirstName,
-          tgAccountLastName
+          tgAccountLastName,
+          tgAccountPhoneNumber
         }) => ({
           id: tgAccountId,
           userName: tgAccountUserName,
           firstName: tgAccountFirstName,
-          lastName: tgAccountLastName
+          lastName: tgAccountLastName,
+          phoneNumber: tgAccountPhoneNumber
         })
       )
     };
@@ -106,6 +108,7 @@ export class AccountsLinkService {
     tgAccountUserName,
     tgAccountFirstName,
     tgAccountLastName,
+    tgAccountPhoneNumber,
     substrateAccountId,
     active = true
   }: EnsureAccountLinkInputDto) {
@@ -114,6 +117,7 @@ export class AccountsLinkService {
     newAccountsLinkEntity.tgAccountUserName = tgAccountUserName;
     newAccountsLinkEntity.tgAccountFirstName = tgAccountFirstName;
     newAccountsLinkEntity.tgAccountLastName = tgAccountLastName;
+    newAccountsLinkEntity.tgAccountPhoneNumber = tgAccountPhoneNumber;
     newAccountsLinkEntity.substrateAccountId = substrateAccountId;
     newAccountsLinkEntity.active = active;
     newAccountsLinkEntity.createdAt = new Date();
@@ -125,10 +129,11 @@ export class AccountsLinkService {
   async ensureAccountLink({
     tgAccountId,
     tgAccountUserName,
+    tgAccountPhoneNumber,
     tgAccountFirstName,
     tgAccountLastName,
     substrateAccountId,
-    active = true
+    active
   }: EnsureAccountLinkInputDto) {
     // TODO this approach is actual in case when we want to provide support multiple linked TG accounts to one Substrate account.
     // const allLinksForTgAccount = await this.findAllActiveByTgAccountId(
@@ -156,24 +161,26 @@ export class AccountsLinkService {
     }
 
     if (existingEntity) {
-      existingEntity.active = true;
+      existingEntity.active = active;
       await this.accountsLinkRepository.save(existingEntity);
+      return existingEntity;
       console.log('Accounts are already linked');
-    } else {
-      await this.createAccountsLink({
+    } else if (!existingEntity && active) {
+      return await this.createAccountsLink({
         tgAccountId,
+        tgAccountPhoneNumber,
         tgAccountUserName,
         tgAccountFirstName,
         tgAccountLastName,
         substrateAccountId,
         active
       });
-      console.log('New accounts link has been created');
     }
   }
 
   async parseAndVerifySubstrateAccountFromSignature({
     tgAccountId,
+    tgAccountPhoneNumber,
     tgAccountUserName,
     tgAccountFirstName,
     tgAccountLastName,
@@ -205,13 +212,35 @@ export class AccountsLinkService {
     )
       throw new Error('Signature is invalid.'); // TODO add error handler
 
-    await this.ensureAccountLink({
+    let linkActiveStatus = false;
+
+    switch (data.action) {
+      case SignedMessageAction.TELEGRAM_ACCOUNT_LINK:
+        linkActiveStatus = true;
+        break;
+      case SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK:
+        linkActiveStatus = false;
+        break;
+      default:
+    }
+
+    return await this.ensureAccountLink({
       tgAccountId,
+      tgAccountPhoneNumber,
       tgAccountUserName,
       tgAccountFirstName,
       tgAccountLastName,
       substrateAccountId: data.substrateAccount,
-      active: true
+      active: linkActiveStatus
     });
+  }
+
+  async deactivateAllLinksByTgAccount(tgAccountId: number) {
+    const existingLinks = await this.findAllActiveByTgAccountId(tgAccountId);
+
+    for (const link of existingLinks) {
+      link.active = false;
+      await this.accountsLinkRepository.save(link);
+    }
   }
 }

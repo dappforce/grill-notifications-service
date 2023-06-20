@@ -67,11 +67,9 @@ describe('AppController (e2e)', () => {
     const msgForUserStr = JSON.stringify(msgForUserSorted);
 
     console.log('message for User - ');
-    console.log('/login ' + msgForUserStr);
+    console.log('/enable ' + msgForUserStr);
 
     const msgFromUserParsed = JSON.parse(msgForUserStr);
-
-    console.dir(msgFromUserParsed, { depth: null });
 
     const isSignatureValid = isValidSignature(msgFromUserParsed);
 

@@ -9,6 +9,9 @@ export class AccountsLink {
   tgAccountId: number;
 
   @Column()
+  tgAccountPhoneNumber: string;
+
+  @Column()
   tgAccountUserName: string;
 
   @Column()
