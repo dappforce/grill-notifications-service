@@ -7,6 +7,7 @@ import {
   NotificationSubscription
 } from '../typeorm/notificationSettings.entity';
 import { NotificationSettingsGqlInput } from '../graphql/notificationSettings.gql.input';
+import { NotificationSettingsGqlType } from '../graphql/notificationSettings.gql.type';
 
 @Injectable()
 export class NotificationSettingsService {
