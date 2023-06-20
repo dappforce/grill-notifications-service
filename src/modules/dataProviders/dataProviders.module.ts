@@ -1,5 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { SquidSubscriptionDataProvider } from './providers/squidSubscription.provider';
+import { SquidSubscriptionDataProvider } from './providers/squid/squidSubscription.provider';
 import { NotificationModule } from '../notification/notification.module';
 import { ApiProviders } from '../../providers/api.provider';
 import { TypeOrmModule } from '@nestjs/typeorm';

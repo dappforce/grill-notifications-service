@@ -21,6 +21,8 @@ export class xSocialConfig {
   readonly GQL_API_AUTH_SECRET: string;
   @IsNotEmpty()
   readonly DATA_PROVIDER_SQUID_WS_URL: string;
+  @IsNotEmpty()
+  readonly TELEGRAM_BOT_GRILL_REDIRECTION_HREF: string;
 
   public API_NO_ADMIN_PROTECTION_STR: string;
 

@@ -32,6 +32,7 @@ export class SquidSubscriptionPost {
   inReplyToKind?: InReplyToKind;
   inReplyToPost?: SquidSubscriptionPost;
   space?: SquidSubscriptionSubstrateSpace;
+  extensions?: SquidSubscriptionExtension[];
 }
 export class SquidSubscriptionSubstrateAccount {
   id: string;

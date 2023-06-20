@@ -15,7 +15,7 @@ import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf } from 'telegraf';
 import { TelegrafContext } from '../../../interfaces/context.interface';
 import { GrillNotificationsBotName } from '../../../app.constants';
-import { NotificationSendersHelper } from './notificationSenders.helper';
+import { NotificationSendersHelper } from '../notificationSenders/notificationSenders.helper';
 import { AccountNotificationData } from '../dto/types';
 
 @Injectable()
