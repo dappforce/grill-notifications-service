@@ -59,5 +59,4 @@ data:
   IPFS_NODE_URL: "https://ipfs.subsocial.network/"
   IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"
   BOT_PORT: "3000"
-  TG_NO_ADMIN_PROTECTION_STR: "false"
   API_NO_ADMIN_PROTECTION_STR: "false"
