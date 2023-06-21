@@ -60,3 +60,5 @@ data:
   IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"
   BOT_PORT: "3000"
   API_NO_ADMIN_PROTECTION_STR: "false"
+  DATA_PROVIDER_SQUID_WS_URL: "wss://squid.subsquid.io/xsocial/graphql"
+  TELEGRAM_BOT_GRILL_REDIRECTION_HREF: "https://donate-grillchat.subsocial.network  "
