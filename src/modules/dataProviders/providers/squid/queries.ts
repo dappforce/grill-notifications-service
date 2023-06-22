@@ -1,8 +1,28 @@
-
-
-export const squidSubQueryNotifications = `
+export const squidSubQueryNotificationsShort = `
         subscription {
-          notifications(limit: 300, orderBy: activity_blockNumber_DESC) {
+          notifications(limit: 500, orderBy: activity_blockNumber_DESC) {
+            id
+            activity {
+              blockNumber
+            }
+          }
+        }
+    `;
+
+export const squidSubQueryActivitiesShort = `
+        subscription {
+          activities(limit: 500, orderBy: activity_blockNumber_DESC) {
+            id
+            blockNumber
+          }
+        }
+    `;
+
+export const getSquidQueryNotificationsFull = (ids: string[]) => `
+        query {
+          notifications(orderBy: activity_blockNumber_DESC, where: {id_in: [${ids
+            .map((id) => `"${id}"`)
+            .join(', ')}]}) {
             id
             account {
               id
@@ -71,4 +91,4 @@ export const squidSubQueryNotifications = `
             }
           }
         }
-    `
+    `;

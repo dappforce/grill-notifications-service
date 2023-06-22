@@ -3,21 +3,28 @@ import { Client as GraphqlWsClient } from 'graphql-ws';
 import { NotificationService } from '../../../notification/services/notification.service';
 import {
   SquidContentExtensionSchemaId,
-  SquidSubscriptionActivitiesResponseDto,
+  SquidActivitiesResponseDto,
+  SquidNotificationsResponseDto,
+  SquidSubscriptionResponseDto,
   SquidSubscriptionNotificationsResponseDto,
-  SquidSubscriptionResponseDto
-} from '../../dto/squid/squidSubscriptionResponse.dto';
-import { SquidApiSubscriptionQueryName } from '../../typeorm/squidDataSubscriptionStatus';
+  SquidSubscriptionsActivitiesResponseDto
+} from '../../dto/squid/squidResponse.dto';
+import { SquidApiQueryName } from '../../typeorm/squidDataSubscriptionStatus';
 import { DataProvidersService } from '../../services/dataProviders.service';
 import { EventName } from '../../dto/squid/squidEvents.dto';
-import { squidSubQueryNotifications } from './queries';
+import {
+  squidSubQueryNotificationsShort,
+  getSquidQueryNotificationsFull
+} from './queries';
+import { SquidHelper } from './squid.helper';
 
 @Injectable()
 export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   constructor(
     @Inject('GraphqlWsClient') private graphqlWsClient: GraphqlWsClient,
     private notificationService: NotificationService,
-    public dataProvidersService: DataProvidersService
+    public dataProvidersService: DataProvidersService,
+    public squidHelper: SquidHelper
   ) {}
   onApplicationBootstrap(): any {
     this.subscribeToNotifications();
@@ -26,44 +33,56 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   subscribeToNotifications() {
     this.graphqlWsClient.subscribe(
       {
-        query: squidSubQueryNotifications
+        query: squidSubQueryNotificationsShort
       },
       {
         next: async (data) => {
           console.log(`New squid status:`);
           const notProcessedSubData = (await this.filterSubscriptionData(
-            SquidApiSubscriptionQueryName.notifications,
+            SquidApiQueryName.notifications,
             <Array<SquidSubscriptionNotificationsResponseDto>>(
               data.data.notifications
             )
           )) as Array<SquidSubscriptionNotificationsResponseDto>;
+
           console.log(
             'RAW subscription data :: length - ',
-            (<Array<SquidSubscriptionNotificationsResponseDto>>(
-              data.data.notifications
-            )).length
+            (<Array<SquidNotificationsResponseDto>>data.data.notifications)
+              .length
           );
           console.log(
             'filtered subscription data by blockNumber :: length - ',
             notProcessedSubData.length
           );
+
           if (notProcessedSubData.length === 0) return;
+
+          const fullData = await this.squidHelper.runSquidApiQuery<
+            SquidApiQueryName.notifications,
+            SquidNotificationsResponseDto
+          >(
+            getSquidQueryNotificationsFull(
+              notProcessedSubData.map((item) => item.id)
+            )
+          );
 
           const notProcessedSubDataWithoutWrappers =
             this.filterSubDataNotificationsByContentExtensionWrappers(
-              notProcessedSubData
+              fullData.notifications
             );
+
           console.log(
             'filtered subscription data by blockNumber without wrappers :: length - ',
             notProcessedSubDataWithoutWrappers.length
           );
+
           if (notProcessedSubDataWithoutWrappers.length === 0) return;
 
           await this.handleNewSubDataNotifications(
             notProcessedSubDataWithoutWrappers
           );
           await this.dataProvidersService.updateStatusByQueryName({
-            name: SquidApiSubscriptionQueryName.notifications,
+            name: SquidApiQueryName.notifications,
             lastProcessedBlockNumber: Number.parseInt(
               notProcessedSubDataWithoutWrappers[0].activity.blockNumber
             )
@@ -88,11 +107,11 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
    * @param subQueryName
    * @param subscriptionEntitiesList
    */
-  async filterSubscriptionData<Q extends SquidApiSubscriptionQueryName>(
+  async filterSubscriptionData<Q extends SquidApiQueryName>(
     subQueryName: Q,
     subscriptionEntitiesList: Array<
       | SquidSubscriptionNotificationsResponseDto
-      | SquidSubscriptionActivitiesResponseDto
+      | SquidSubscriptionsActivitiesResponseDto
     >
   ) {
     const subscriptionStatusData =
@@ -101,8 +120,8 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
       });
 
     switch (subQueryName) {
-      case SquidApiSubscriptionQueryName.activities:
-        return (<Array<SquidSubscriptionActivitiesResponseDto>>(
+      case SquidApiQueryName.activities:
+        return (<Array<SquidActivitiesResponseDto>>(
           subscriptionEntitiesList
         )).filter(
           (activity) =>
@@ -110,8 +129,8 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
             subscriptionStatusData.lastProcessedBlockNumber
         );
         break;
-      case SquidApiSubscriptionQueryName.notifications:
-        return (<Array<SquidSubscriptionNotificationsResponseDto>>(
+      case SquidApiQueryName.notifications:
+        return (<Array<SquidNotificationsResponseDto>>(
           subscriptionEntitiesList
         )).filter(
           (notification) =>
@@ -124,7 +143,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   }
 
   async handleNewSubDataNotifications(
-    notifications: Array<SquidSubscriptionNotificationsResponseDto>
+    notifications: Array<SquidNotificationsResponseDto>
   ) {
     for (const squidNotification of notifications) {
       const { activity, account, id } = squidNotification;
@@ -164,10 +183,9 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
    * @param notifications
    */
   filterSubDataNotificationsByContentExtensionWrappers(
-    notifications: Array<SquidSubscriptionNotificationsResponseDto>
+    notifications: Array<SquidNotificationsResponseDto>
   ) {
-    const filteredNotifications: Array<SquidSubscriptionNotificationsResponseDto> =
-      [];
+    const filteredNotifications: Array<SquidNotificationsResponseDto> = [];
 
     for (const notificationData of notifications) {
       if (

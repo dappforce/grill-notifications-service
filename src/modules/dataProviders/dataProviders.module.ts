@@ -6,11 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationSettings } from '../notificationSettings/typeorm/notificationSettings.entity';
 import { SquidDataSubscriptionStatus } from './typeorm/squidDataSubscriptionStatus';
 import { DataProvidersService } from './services/dataProviders.service';
+import {SquidHelper} from "./providers/squid/squid.helper";
 
 @Module({
   providers: [
     SquidSubscriptionDataProvider,
     DataProvidersService,
+    SquidHelper,
     ...ApiProviders
   ],
   imports: [

@@ -22,6 +22,8 @@ export class xSocialConfig {
   @IsNotEmpty()
   readonly DATA_PROVIDER_SQUID_WS_URL: string;
   @IsNotEmpty()
+  readonly DATA_PROVIDER_SQUID_HTTPS_URL: string;
+  @IsNotEmpty()
   readonly TELEGRAM_BOT_GRILL_REDIRECTION_HREF: string;
   @IsNotEmpty()
   readonly TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: string;
