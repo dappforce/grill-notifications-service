@@ -12,7 +12,7 @@ export const linkSubstrateTg = z.object({
   substrateAccount: z.string(),
   signature: z.string(),
   payload: z.object({
-    message: z.string()
+    action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_LINK)
   })
 });
 
@@ -21,7 +21,7 @@ export const unlinkSubstrateTg = z.object({
   substrateAccount: z.string(),
   signature: z.string(),
   payload: z.object({
-    message: z.string()
+    action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_UNLINK)
   })
 });
 
@@ -30,4 +30,4 @@ export const signedMessage = z.discriminatedUnion('action', [
   unlinkSubstrateTg
 ]);
 
-export type SignedMessage = z.infer<typeof signedMessage>;
+export type SignedMessageWithDetails = z.infer<typeof signedMessage>;

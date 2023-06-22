@@ -43,7 +43,7 @@ export class LinkStatusScene {
     );
 
     const links = await this.accountsLinkService.findAllActiveByTgAccountId(
-      userId
+      userId.toString()
     );
     await ctx.deleteMessage(processingMessage.message_id);
 
@@ -53,7 +53,9 @@ export class LinkStatusScene {
       );
     } else {
       await ctx.reply(
-        `This Telegram account is linked with such Grill accounts:\n${links.map((link) => `- ${link.substrateAccountId};\n`)}`
+        `This Telegram account is linked with such Grill account:\n${links.map(
+          (link) => `- ${link.substrateAccountId};\n`
+        )}`
       );
     }
     await ctx.scene.leave();

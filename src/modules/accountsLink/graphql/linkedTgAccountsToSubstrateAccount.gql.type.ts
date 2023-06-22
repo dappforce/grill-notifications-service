@@ -3,7 +3,7 @@ import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 @ObjectType()
 export class TelegramAccountDetails {
   @Field({ nullable: false })
-  id: number;
+  accountId: string;
 
   @Field({ nullable: false })
   userName: string;
@@ -18,8 +18,8 @@ export class TelegramAccountDetails {
   phoneNumber: string;
 }
 
-@ObjectType('LinkedTgAccountsToSubstrateAccountGql')
-export class LinkedTgAccountsToSubstrateAccountGqlType {
+@ObjectType('LinkedTgAccountsToSubstrateAccountResponseType')
+export class LinkedTgAccountsToSubstrateAccountResponseType {
   @Field(() => [TelegramAccountDetails], { nullable: true })
   telegramAccounts: TelegramAccountDetails[];
 }

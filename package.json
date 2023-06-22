@@ -57,7 +57,6 @@
     "telegram-keyboard": "^2.3.2",
     "typegram": "^5.0.0",
     "typeorm": "^0.3.15",
-    "uuid": "^9.0.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {

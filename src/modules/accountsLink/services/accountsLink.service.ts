@@ -1,48 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
-import { AccountsLink } from '../typeorm/accountsLink.entity';
+import {
+  AccountsLink,
+  NotificationServiceName
+} from '../typeorm/accountsLink.entity';
 import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
-  SignedMessage,
+  SignedMessageWithDetails,
   signedMessage,
   SignedMessageAction
 } from '../dto/substreateTgAccountsLinkingMsg.dto';
 import { sortObj } from 'jsonabc';
 import { AccountsLinkingMessageTemplateGqlType } from '../graphql/accountsLinkingMessageTemplate.gql.type';
 import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
-import { ParseLinkingMessageInputDto } from '../dto/parseLinkingMessageInput.dto';
-import { LinkedTgAccountsToSubstrateAccountGqlType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
+import { ProcessLinkingIdInputTelegramDto } from '../dto/processLinkingIdInput.telegram.dto';
+import { LinkedTgAccountsToSubstrateAccountResponseType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
+import { TelegramAccountsLinkService } from './telegram.accountsLink.service';
 
 @Injectable()
 export class AccountsLinkService {
   constructor(
     @InjectRepository(AccountsLink)
     public accountsLinkRepository: MongoRepository<AccountsLink>,
-    public cryptoUtils: CryptoUtils
+    public cryptoUtils: CryptoUtils,
+    @Inject(forwardRef(() => TelegramAccountsLinkService))
+    public telegramAccountsLinkService: TelegramAccountsLinkService
   ) {}
-
-  getTelegramBotLinkingMessage(
-    action: SignedMessageAction,
-    substrateAccount: string
-  ): AccountsLinkingMessageTemplateGqlType {
-    let tpl: SignedMessage = {
-      action: action,
-      signature: '',
-      substrateAccount:
-        this.cryptoUtils.substrateAddressToSubsocialFormat(substrateAccount),
-      payload: {
-        message:
-          `Link to Substrate account ${this.cryptoUtils.substrateAddressToHex(
-            substrateAccount
-          )} (in hex)`.replace(/\s/g, '_')
-      }
-    };
-
-    return {
-      messageTpl: JSON.stringify(tpl)
-    };
-  }
 
   async findAllActiveBySubstrateAccountId(id: string) {
     return await this.accountsLinkRepository.find({
@@ -53,107 +37,87 @@ export class AccountsLinkService {
     });
   }
 
-  async findAllActiveByTgAccountId(id: number) {
+  async findAllActiveByTgAccountId(id: string) {
     return await this.accountsLinkRepository.find({
       where: {
-        tgAccountId: id,
+        notificationServiceAccountId: id,
+        notificationServiceName: NotificationServiceName.telegram,
         active: true
       }
     });
   }
-  async findAllBySubstrateAccountId(id: string) {
-    return await this.accountsLinkRepository.find({
-      where: {
-        substrateAccountId: id
-      }
-    });
-  }
 
-  async findAllByTgAccountId(id: string) {
-    return await this.accountsLinkRepository.find({
-      where: {
-        tgAccountId: id
-      }
-    });
-  }
+  async createTemporaryLinkingId(
+    signedMsgWithDetails: string,
+    action: SignedMessageAction
+  ) {
+    const parsedMessageWithDetails =
+      this.parseAndVerifySignedMessageWithDetails(
+        decodeURIComponent(signedMsgWithDetails)
+      );
+    switch (action) {
+      case SignedMessageAction.TELEGRAM_ACCOUNT_LINK:
+        if (
+          parsedMessageWithDetails.payload.action !==
+          SignedMessageAction.TELEGRAM_ACCOUNT_LINK
+        )
+          throw new Error(`Invalid action.`);
 
-  async getActiveLinkedTgAccountsBySubstrateAccountWithDetails(
-    substrateAccount: string
-  ): Promise<LinkedTgAccountsToSubstrateAccountGqlType> {
-    const links = await this.findAllActiveBySubstrateAccountId(
-      substrateAccount
-    );
-
-    return {
-      telegramAccounts: links.map(
-        ({
-          tgAccountId,
-          tgAccountUserName,
-          tgAccountFirstName,
-          tgAccountLastName,
-          tgAccountPhoneNumber
-        }) => ({
-          id: tgAccountId,
-          userName: tgAccountUserName,
-          firstName: tgAccountFirstName,
-          lastName: tgAccountLastName,
-          phoneNumber: tgAccountPhoneNumber
-        })
-      )
-    };
+        return this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
+          parsedMessageWithDetails
+        );
+      default:
+        throw new Error('Invalid action value.');
+    }
   }
 
   async createAccountsLink({
-    tgAccountId,
-    tgAccountUserName,
-    tgAccountFirstName,
-    tgAccountLastName,
-    tgAccountPhoneNumber,
+    notificationServiceName,
+    notificationServiceAccountId,
     substrateAccountId,
-    active = true
+    active
   }: EnsureAccountLinkInputDto) {
     const newAccountsLinkEntity = new AccountsLink();
-    newAccountsLinkEntity.tgAccountId = tgAccountId;
-    newAccountsLinkEntity.tgAccountUserName = tgAccountUserName;
-    newAccountsLinkEntity.tgAccountFirstName = tgAccountFirstName;
-    newAccountsLinkEntity.tgAccountLastName = tgAccountLastName;
-    newAccountsLinkEntity.tgAccountPhoneNumber = tgAccountPhoneNumber;
+    newAccountsLinkEntity.notificationServiceAccountId =
+      notificationServiceAccountId;
+    newAccountsLinkEntity.notificationServiceName = notificationServiceName;
     newAccountsLinkEntity.substrateAccountId = substrateAccountId;
     newAccountsLinkEntity.active = active;
     newAccountsLinkEntity.createdAt = new Date();
 
-    const ent = await this.accountsLinkRepository.save(newAccountsLinkEntity);
-    return ent;
+    const entity = await this.accountsLinkRepository.save(
+      newAccountsLinkEntity
+    );
+    return entity;
   }
 
   async ensureAccountLink({
-    tgAccountId,
-    tgAccountUserName,
-    tgAccountPhoneNumber,
-    tgAccountFirstName,
-    tgAccountLastName,
+    notificationServiceName,
+    notificationServiceAccountId,
     substrateAccountId,
     active
   }: EnsureAccountLinkInputDto) {
-    // TODO this approach is actual in case when we want to provide support multiple linked TG accounts to one Substrate account.
-    // const allLinksForTgAccount = await this.findAllActiveByTgAccountId(
-    //   tgAccountId
-    // );
-    //
-    // for (const link of allLinksForTgAccount) {
-    //   link.active = false;
-    //   await this.accountsLinkRepository.save(link);
-    // }
-
     const existingEntity = await this.accountsLinkRepository.findOne({
       where: {
-        tgAccountId: { $eq: tgAccountId },
+        notificationServiceAccountId: {
+          $eq: notificationServiceAccountId.toString()
+        },
+        notificationServiceName: {
+          $eq: notificationServiceName
+        },
         substrateAccountId: { $eq: substrateAccountId }
       }
     });
 
-    const allLinksForSubstrateAccount =
-      await this.findAllActiveBySubstrateAccountId(substrateAccountId);
+    const allLinksForSubstrateAccount = await this.accountsLinkRepository.find({
+      where: {
+        notificationServiceName: {
+          $eq: notificationServiceName
+        },
+        substrateAccountId: { $eq: substrateAccountId },
+        active: true
+      }
+    });
 
     for (const link of allLinksForSubstrateAccount) {
       link.active = false;
@@ -167,33 +131,24 @@ export class AccountsLinkService {
       console.log('Accounts are already linked');
     } else if (!existingEntity && active) {
       return await this.createAccountsLink({
-        tgAccountId,
-        tgAccountPhoneNumber,
-        tgAccountUserName,
-        tgAccountFirstName,
-        tgAccountLastName,
+        notificationServiceName,
+        notificationServiceAccountId,
         substrateAccountId,
         active
       });
     }
   }
 
-  async parseAndVerifySubstrateAccountFromSignature({
-    tgAccountId,
-    tgAccountPhoneNumber,
-    tgAccountUserName,
-    tgAccountFirstName,
-    tgAccountLastName,
-    linkingMessage
-  }: ParseLinkingMessageInputDto) {
+  parseAndVerifySignedMessageWithDetails(
+    signedMessageWithDetails: string
+  ): SignedMessageWithDetails {
     let parsedMessage = null;
     try {
-      console.log(linkingMessage);
-      parsedMessage = JSON.parse(linkingMessage);
+      parsedMessage = JSON.parse(signedMessageWithDetails);
     } catch (e) {
       throw new Error('Provided invalid message.'); // TODO add error handler
     }
-    if (!parsedMessage) throw new Error(); // TODO add error handler
+    if (!signedMessageWithDetails) throw new Error(); // TODO add error handler
 
     const messageValidation = signedMessage.safeParse(parsedMessage);
 
@@ -212,35 +167,6 @@ export class AccountsLinkService {
     )
       throw new Error('Signature is invalid.'); // TODO add error handler
 
-    let linkActiveStatus = false;
-
-    switch (data.action) {
-      case SignedMessageAction.TELEGRAM_ACCOUNT_LINK:
-        linkActiveStatus = true;
-        break;
-      case SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK:
-        linkActiveStatus = false;
-        break;
-      default:
-    }
-
-    return await this.ensureAccountLink({
-      tgAccountId,
-      tgAccountPhoneNumber,
-      tgAccountUserName,
-      tgAccountFirstName,
-      tgAccountLastName,
-      substrateAccountId: data.substrateAccount,
-      active: linkActiveStatus
-    });
-  }
-
-  async deactivateAllLinksByTgAccount(tgAccountId: number) {
-    const existingLinks = await this.findAllActiveByTgAccountId(tgAccountId);
-
-    for (const link of existingLinks) {
-      link.active = false;
-      await this.accountsLinkRepository.save(link);
-    }
+    return data;
   }
 }

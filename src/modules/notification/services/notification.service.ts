@@ -5,7 +5,10 @@ import { NotificationEventDataForSubstrateAccountDto } from '../dto/notification
 import { xSocialConfig } from '../../../config';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
 import { NotificationSettingsService } from '../../notificationSettings/services/notificationSettings.service';
-import { AccountsLink } from '../../accountsLink/typeorm/accountsLink.entity';
+import {
+  AccountsLink,
+  NotificationServiceName
+} from '../../accountsLink/typeorm/accountsLink.entity';
 import {
   NotificationSettings,
   NotificationSubscription
@@ -15,7 +18,7 @@ import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf } from 'telegraf';
 import { TelegrafContext } from '../../../interfaces/context.interface';
 import { GrillNotificationsBotName } from '../../../app.constants';
-import { NotificationSendersHelper } from '../notificationSenders/notificationSenders.helper';
+import { TelegramNotificationSendersHelper } from '../notificationSenders/telegramNotificationSenders.helper';
 import { AccountNotificationData } from '../dto/types';
 
 @Injectable()
@@ -24,7 +27,7 @@ export class NotificationService {
     private readonly xSocialConfig: xSocialConfig,
     private readonly accountsLinkService: AccountsLinkService,
     private readonly notificationSettingsService: NotificationSettingsService,
-    private readonly notificationSendersHelper: NotificationSendersHelper,
+    private readonly telegramNotificationSendersHelper: TelegramNotificationSendersHelper,
     @InjectBot(GrillNotificationsBotName) private bot: Telegraf<TelegrafContext>
   ) {}
 
@@ -38,7 +41,7 @@ export class NotificationService {
 
     if (activeAccountsLinks.length === 0) return;
 
-    const accountNotificationData = new Map<number, AccountNotificationData>();
+    const accountNotificationData = new Map<string, AccountNotificationData>();
 
     for (const link of activeAccountsLinks) {
       let accNotificationSettings =
@@ -53,7 +56,8 @@ export class NotificationService {
               this.notificationSettingsService.getDefaultNotificationSubscriptions()
           });
       }
-      accountNotificationData.set(link.tgAccountId, {
+      // TODO "notificationServiceAccountId" should be changed in case switching to One-to-Mane linking schema.
+      accountNotificationData.set(link.substrateAccountId, {
         ...link,
         notificationSettings: accNotificationSettings
       });
@@ -80,8 +84,12 @@ export class NotificationService {
     notificationRecipientData: AccountNotificationData,
     triggerData: NotificationEventDataForSubstrateAccountDto
   ) {
-    if (eventSubscriptionData.telegramBot) {
-      await this.notificationSendersHelper.sendMessageTelegramBot(
+    if (
+      eventSubscriptionData.telegramBot &&
+      notificationRecipientData.notificationServiceName ===
+        NotificationServiceName.telegram
+    ) {
+      await this.telegramNotificationSendersHelper.sendMessageTelegramBot(
         notificationRecipientData,
         triggerData
       );

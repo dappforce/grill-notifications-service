@@ -1,26 +1,17 @@
 import { Entity, PrimaryColumn, Column, ObjectIdColumn } from 'typeorm';
 
+export enum NotificationServiceName {
+  telegram = 'telegram',
+  discord = 'discord',
+  email = 'email'
+}
+
 @Entity()
 export class AccountsLink {
   @ObjectIdColumn()
   _id: string;
 
   @PrimaryColumn()
-  tgAccountId: number;
-
-  @Column()
-  tgAccountPhoneNumber: string;
-
-  @Column()
-  tgAccountUserName: string;
-
-  @Column()
-  tgAccountFirstName: string;
-
-  @Column()
-  tgAccountLastName: string;
-
-  @Column()
   substrateAccountId: string;
 
   @Column()
@@ -28,4 +19,14 @@ export class AccountsLink {
 
   @Column(() => Date)
   createdAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: NotificationServiceName,
+    default: NotificationServiceName.telegram
+  })
+  notificationServiceName: NotificationServiceName;
+
+  @Column()
+  notificationServiceAccountId: string;
 }

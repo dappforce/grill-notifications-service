@@ -1,9 +1,8 @@
+import { NotificationServiceName } from '../typeorm/accountsLink.entity';
+
 export class EnsureAccountLinkInputDto {
-  tgAccountId: number;
-  tgAccountPhoneNumber: string;
-  tgAccountUserName: string;
-  tgAccountFirstName: string;
-  tgAccountLastName: string;
+  notificationServiceName: NotificationServiceName;
+  notificationServiceAccountId: string;
   substrateAccountId: string;
   active?: boolean;
 }

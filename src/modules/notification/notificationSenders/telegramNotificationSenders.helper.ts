@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
-import { NotificationSettingsService } from '../../notificationSettings/services/notificationSettings.service';
 import { InjectBot } from 'nestjs-telegraf';
 import { GrillNotificationsBotName } from '../../../app.constants';
 import { Markup, Telegraf } from 'telegraf';
@@ -13,7 +11,7 @@ import { InlineKeyboardMarkup } from 'typegram';
 import { xSocialConfig } from '../../../config';
 
 @Injectable()
-export class NotificationSendersHelper {
+export class TelegramNotificationSendersHelper {
   constructor(
     @InjectBot(GrillNotificationsBotName)
     private bot: Telegraf<TelegrafContext>,
@@ -28,7 +26,7 @@ export class NotificationSendersHelper {
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated:
         await this.bot.telegram.sendMessage(
-          notificationRecipientData.tgAccountId,
+          notificationRecipientData.notificationServiceAccountId,
           this.getTextToCommentReplyCreated(triggerData),
           this.getKeyboardWithRedirectInlineButton(
             'Check hear 👉',
@@ -39,7 +37,7 @@ export class NotificationSendersHelper {
 
       case EventName.ExtensionDonationCreated:
         await this.bot.telegram.sendMessage(
-          notificationRecipientData.tgAccountId,
+          notificationRecipientData.notificationServiceAccountId,
           this.getTextToExtensionDonationCreated(triggerData),
           this.getKeyboardWithRedirectInlineButton(
             'Check hear 👉',

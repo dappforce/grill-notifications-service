@@ -3,7 +3,7 @@ import { SubsocialApi } from '@subsocial/api';
 import BigNumber from 'bignumber.js';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
-import {u8aToHex} from "@polkadot/util";
+import { u8aToHex } from '@polkadot/util';
 
 export type DataForSignatureValidation = {
   signature: string;
@@ -17,7 +17,12 @@ export class CryptoUtils {
 
   isValidSignature(dataForValidation: DataForSignatureValidation) {
     const { message, signature, account } = dataForValidation;
-    return signatureVerify(message, signature, account).isValid;
+    try {
+      return signatureVerify(message, signature, account).isValid;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
   }
 
   substrateAddressToSubsocialFormat(address: string) {

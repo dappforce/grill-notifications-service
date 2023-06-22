@@ -11,38 +11,74 @@ import {
 import { AccountsLinkingMessageTemplateGqlType } from './accountsLinkingMessageTemplate.gql.type';
 import { AccountsLinkService } from '../services/accountsLink.service';
 import { SignedMessageAction } from '../dto/substreateTgAccountsLinkingMsg.dto';
-import { LinkedTgAccountsToSubstrateAccountGqlType } from './linkedTgAccountsToSubstrateAccount.gql.type';
+import { LinkedTgAccountsToSubstrateAccountResponseType } from './linkedTgAccountsToSubstrateAccount.gql.type';
+import { NotificationSettings } from '../../notificationSettings/typeorm/notificationSettings.entity';
+import { UseGuards } from '@nestjs/common';
+import { AdminGqlGuard } from '../../../common/guards/admin.gql.guard';
+import { NotificationSettingsGqlInput } from '../../notificationSettings/graphql/notificationSettings.gql.input';
+import { TelegramAccountsLinkService } from '../services/telegram.accountsLink.service';
+import { CreateTemporaryLinkingIdForTelegramResponseDto } from './createTemporaryLinkingIdForTelegram.response.dto';
+import { UnlinkTelegramAccountResponseDto } from './unlinkTelegramAccount.response.dto';
 
 @Resolver((of) => AccountsLinkingMessageTemplateGqlType)
 export class AccountsLinkingGqlResolver {
-  constructor(private accountsLinkService: AccountsLinkService) {}
+  constructor(
+    private accountsLinkService: AccountsLinkService,
+    private telegramAccountsLinkService: TelegramAccountsLinkService
+  ) {}
 
   @Query(() => AccountsLinkingMessageTemplateGqlType)
-  linkSubstrateTelegramAccountsMsg(
+  linkingMessageForTelegramAccount(
     @Args('substrateAccount') substrateAccount: string
   ) {
-    return this.accountsLinkService.getTelegramBotLinkingMessage(
+    return this.telegramAccountsLinkService.getTelegramBotLinkingMessage(
       SignedMessageAction.TELEGRAM_ACCOUNT_LINK,
       substrateAccount
     );
   }
 
   @Query(() => AccountsLinkingMessageTemplateGqlType)
-  unlinkSubstrateTelegramAccountsMsg(
+  unlinkingMessageForTelegramAccount(
     @Args('substrateAccount') substrateAccount: string
   ) {
-    return this.accountsLinkService.getTelegramBotLinkingMessage(
+    return this.telegramAccountsLinkService.getTelegramBotLinkingMessage(
       SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK,
       substrateAccount
     );
   }
 
-  @Query(() => LinkedTgAccountsToSubstrateAccountGqlType)
-  linkedTgAccountsToSubstrateAccount(
+  @Query(() => LinkedTgAccountsToSubstrateAccountResponseType)
+  telegramAccountsLinkedToSubstrateAccount(
     @Args('substrateAccount') substrateAccount: string
   ) {
-    return this.accountsLinkService.getActiveLinkedTgAccountsBySubstrateAccountWithDetails(
+    return this.telegramAccountsLinkService.getActiveLinkedTgAccountsBySubstrateAccount(
       substrateAccount
+    );
+  }
+
+  @Mutation((returns) => CreateTemporaryLinkingIdForTelegramResponseDto)
+  // @UseGuards(AdminGqlGuard)
+  async createTemporaryLinkingIdForTelegram(
+    @Args('signedMessageWithDetails')
+    signedMessageWithDetails: string
+  ) {
+    return {
+      id: (
+        await this.accountsLinkService.createTemporaryLinkingId(
+          signedMessageWithDetails,
+          SignedMessageAction.TELEGRAM_ACCOUNT_LINK
+        )
+      ).id
+    };
+  }
+  @Mutation((returns) => UnlinkTelegramAccountResponseDto)
+  // @UseGuards(AdminGqlGuard)
+  async unlinkTelegramAccount(
+    @Args('signedMessageWithDetails')
+    signedMessageWithDetails: string
+  ) {
+    return this.telegramAccountsLinkService.unlinkTelegramAccount(
+      signedMessageWithDetails
     );
   }
 }

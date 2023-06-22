@@ -47,29 +47,52 @@ describe('AppController (e2e)', () => {
   test('sign message by private key and verify signature', () => {
     if (!keyPair) return;
 
-    const payload = sortObj({
-      message: `Link to Substrate account ${u8aToHex(
-        keyPair.publicKey
-      )} (in hex)`.replace(/\s/g, '_')
+    const payloadLink = sortObj({
+      action: 'TELEGRAM_ACCOUNT_LINK'
     });
 
-    const signedPayload = keyPair.sign(stringToU8a(JSON.stringify(payload)));
+    const payloadUnlink = sortObj({
+      action: 'TELEGRAM_ACCOUNT_UNLINK'
+    });
 
-    const signatureHex = u8aToHex(signedPayload);
+    const signedPayloadLink = keyPair.sign(
+      stringToU8a(JSON.stringify(payloadLink))
+    );
+    const signedPayloadUnLink = keyPair.sign(
+      stringToU8a(JSON.stringify(payloadUnlink))
+    );
 
-    const msgForUserSorted = {
+    const signatureHexLink = u8aToHex(signedPayloadLink);
+    const signatureHexUnLink = u8aToHex(signedPayloadUnLink);
+
+    const msgForUserLink = {
       action: 'TELEGRAM_ACCOUNT_LINK',
       substrateAccount: encodeAddress(u8aToHex(keyPair.publicKey), 28),
-      signature: signatureHex,
-      payload
+      signature: signatureHexLink,
+      payload: payloadLink
     };
 
-    const msgForUserStr = JSON.stringify(msgForUserSorted);
+    const msgForUserUnLink = {
+      action: 'TELEGRAM_ACCOUNT_UNLINK',
+      substrateAccount: encodeAddress(u8aToHex(keyPair.publicKey), 28),
+      signature: signatureHexUnLink,
+      payload: payloadUnlink
+    };
 
-    console.log('message for User - ');
-    console.log('/enable ' + msgForUserStr);
+    const msgForUserStrLink = JSON.stringify(msgForUserLink);
+    const msgForUserStrUnlink = JSON.stringify(msgForUserUnLink);
 
-    const msgFromUserParsed = JSON.parse(msgForUserStr);
+    console.log('message for User LINK - ');
+    console.log(msgForUserStrLink);
+    console.log(encodeURIComponent(msgForUserStrLink));
+
+    console.log('message for User UNLINK - ');
+    console.log(msgForUserStrUnlink);
+    console.log(encodeURIComponent(msgForUserStrUnlink));
+
+    const msgFromUserParsed = JSON.parse(decodeURIComponent(msgForUserStrLink));
+
+    console.dir(msgFromUserParsed, { depth: null });
 
     const isSignatureValid = isValidSignature(msgFromUserParsed);
 

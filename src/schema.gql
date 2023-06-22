@@ -7,15 +7,24 @@ type AccountsLinkingMessageTemplateGql {
 }
 
 type TelegramAccountDetails {
-  id: Float!
+  accountId: String!
   userName: String!
   firstName: String
   lastName: String
   phoneNumber: String
 }
 
-type LinkedTgAccountsToSubstrateAccountGql {
+type LinkedTgAccountsToSubstrateAccountResponseType {
   telegramAccounts: [TelegramAccountDetails!]
+}
+
+type CreateTemporaryLinkingIdForTelegramResponseDto {
+  id: String!
+}
+
+type UnlinkTelegramAccountResponseDto {
+  success: Boolean!
+  message: String
 }
 
 type NotificationSubscription {
@@ -32,14 +41,16 @@ type NotificationSettingsGql {
 
 type Query {
   notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
-  linkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
-  unlinkSubstrateTelegramAccountsMsg(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
-  linkedTgAccountsToSubstrateAccount(substrateAccount: String!): LinkedTgAccountsToSubstrateAccountGql!
+  linkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  unlinkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  telegramAccountsLinkedToSubstrateAccount(substrateAccount: String!): LinkedTgAccountsToSubstrateAccountResponseType!
 }
 
 type Mutation {
   createNotificationSettingsToAccount(createNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
   updateNotificationSettingsToAccount(updateNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
+  createTemporaryLinkingIdForTelegram(signedMessageWithDetails: String!): CreateTemporaryLinkingIdForTelegramResponseDto!
+  unlinkTelegramAccount(signedMessageWithDetails: String!): UnlinkTelegramAccountResponseDto!
 }
 
 input NotificationSettingsGqlInput {
