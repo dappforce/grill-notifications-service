@@ -33,7 +33,6 @@ export class SquidHelper {
     Q extends SquidApiQueryName,
     R extends SquidNotificationsResponseDto | SquidActivitiesResponseDto
   >(query: string): Promise<SquidApiResponse<Q, R>> {
-    console.log(query);
     const resp = await axios({
       url: this.xSocialConfig.DATA_PROVIDER_SQUID_HTTPS_URL,
       method: 'post',

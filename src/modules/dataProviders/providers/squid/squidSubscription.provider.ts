@@ -5,7 +5,6 @@ import {
   SquidContentExtensionSchemaId,
   SquidActivitiesResponseDto,
   SquidNotificationsResponseDto,
-  SquidSubscriptionResponseDto,
   SquidSubscriptionNotificationsResponseDto,
   SquidSubscriptionsActivitiesResponseDto
 } from '../../dto/squid/squidResponse.dto';

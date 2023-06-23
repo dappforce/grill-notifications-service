@@ -118,8 +118,25 @@ export class AccountsLinkService {
         active: true
       }
     });
+    const allLinksForNotificationsServiceAccount =
+      await this.accountsLinkRepository.find({
+        where: {
+          notificationServiceName: {
+            $eq: notificationServiceName
+          },
+          notificationServiceAccountId: {
+            $eq: notificationServiceAccountId.toString()
+          },
+          active: true
+        }
+      });
 
     for (const link of allLinksForSubstrateAccount) {
+      link.active = false;
+      await this.accountsLinkRepository.save(link);
+    }
+
+    for (const link of allLinksForNotificationsServiceAccount) {
       link.active = false;
       await this.accountsLinkRepository.save(link);
     }

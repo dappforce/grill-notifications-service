@@ -58,6 +58,11 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
                   ownedByAccount {
                     id
                   }
+                  parentPost {
+                    id
+                    body
+                    summary
+                  }
                 }
                 toEvm {
                   id
@@ -82,6 +87,11 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
                   space {
                     id
                   }
+                }
+                parentPost {
+                  id
+                  body
+                  summary
                 }
                 extensions {
                   id

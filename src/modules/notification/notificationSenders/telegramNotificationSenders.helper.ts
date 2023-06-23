@@ -52,9 +52,12 @@ export class TelegramNotificationSendersHelper {
   getTextToCommentReplyCreated(
     triggerData: NotificationEventDataForSubstrateAccountDto
   ) {
-    const postText = triggerData.post.summary || triggerData.post.body;
-    return `↪️ New reply to your message${postText ? `:\n"${postText}"` : '.'}
-    `;
+    const originPostText =
+      triggerData.post.parentPost.summary || triggerData.post.parentPost.body;
+    const replyPostText = triggerData.post.summary || triggerData.post.body;
+    return `↪️ Someone replied to your message${
+      originPostText ? `( ${originPostText} )` : ''
+    }${replyPostText ? `:\n"${replyPostText}"` : '.'}`;
   }
 
   getTextToExtensionDonationCreated(
@@ -63,11 +66,11 @@ export class TelegramNotificationSendersHelper {
     const postText =
       triggerData.extension.parentPost.summary ||
       triggerData.extension.parentPost.body;
-    return `🤑 You received new donation of ${this.commonUtils.decorateDonationAmount(
+    return `🤑 You received a donation of ${this.commonUtils.decorateDonationAmount(
       triggerData.extension.amount,
       triggerData.extension.decimals
     )} ${triggerData.extension.token}${
-      postText ? ` w/ message: \n"${postText}"` : '!'
+      postText ? ` with the following message: \n"${postText}".` : '!'
     }
     `;
   }

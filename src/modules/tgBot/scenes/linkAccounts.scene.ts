@@ -80,6 +80,7 @@ export class LinkAccountsScene {
       accountsLink.substrateAccountId;
 
     await ctx.deleteMessage(processingMessage.message_id);
+    delete ctx.session.__scenes.state['processingMessageId'];
     await ctx.scene.leave();
     return;
   }
