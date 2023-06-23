@@ -29,4 +29,7 @@ export class AccountsLink {
 
   @Column()
   notificationServiceAccountId: string;
+
+  @Column()
+  following: boolean;
 }

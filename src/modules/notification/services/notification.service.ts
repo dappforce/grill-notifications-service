@@ -57,7 +57,7 @@ export class NotificationService {
           });
       }
       // TODO "notificationServiceAccountId" should be changed in case switching to One-to-Mane linking schema.
-      accountNotificationData.set(link.substrateAccountId, {
+      accountNotificationData.set(link.notificationServiceAccountId, {
         ...link,
         notificationSettings: accNotificationSettings
       });

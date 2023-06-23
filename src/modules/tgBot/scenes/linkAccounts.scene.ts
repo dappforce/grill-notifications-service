@@ -37,10 +37,12 @@ export class LinkAccountsScene {
     @Sender('phone_number') phoneNumber: string,
     @Sender('id') userId: number
   ): Promise<string> {
-    let processingMessage = null;
-    const linkingTmpId = ctx.state.command.args[0];
 
-    if (!linkingTmpId) {
+    console.log(ctx.state.command.args)
+    let processingMessage = null;
+    const linkingTmpIdOrAddress = ctx.state.command.args[0];
+
+    if (!linkingTmpIdOrAddress) {
       await ctx.reply(
         `Let's rock! Go to your Profile settings in grill.chat application, find "Connect Telegram" button and copy 
         Telegram bot linking message. Than give it to me and I'll link your Grill account with current Telegram account.`,
@@ -65,7 +67,7 @@ export class LinkAccountsScene {
       processingMessage.message_id;
 
     const accountsLink =
-      await this.telegramAccountsLinkService.processTemporaryLinkingId({
+      await this.telegramAccountsLinkService.processTemporaryLinkingIdOrAddress({
         telegramAccountData: {
           accountId: userId.toString(),
           phoneNumber: phoneNumber,
@@ -73,7 +75,7 @@ export class LinkAccountsScene {
           firstName: firstName,
           lastName: lastName
         },
-        linkingId: linkingTmpId
+        linkingIdOrAddress: linkingTmpIdOrAddress
       });
 
     ctx.session.__scenes.state['linkedSubstrateAccount'] =

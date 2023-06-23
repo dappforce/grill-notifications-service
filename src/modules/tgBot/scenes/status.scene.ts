@@ -20,11 +20,13 @@ import { Context } from '../../../interfaces/context.interface';
 import { Markup } from 'telegraf';
 import { TgBotSceneHelpers } from './utils';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
+import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 
 @Scene(LINK_STATUS_SCENE_ID)
-export class LinkStatusScene {
+export class StatusScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
+    private telegramAccountsLinkService: TelegramAccountsLinkService,
     private accountsLinkService: AccountsLinkService
   ) {}
 
@@ -42,21 +44,33 @@ export class LinkStatusScene {
       ])
     );
 
-    const links = await this.accountsLinkService.findAllActiveByTgAccountId(
-      userId.toString()
-    );
+    const linksPersonal =
+      await this.telegramAccountsLinkService.findAllActiveByTgAccountId({
+        accountId: userId.toString(),
+        following: false
+      });
+    const linksFollowing =
+      await this.telegramAccountsLinkService.findAllActiveByTgAccountId({
+        accountId: userId.toString(),
+        following: true
+      });
     await ctx.deleteMessage(processingMessage.message_id);
 
-    if (!links || links.length === 0) {
+    if (linksPersonal.length === 0 && linksFollowing.length === 0) {
       await ctx.reply(
         `You don't have linked Grill accounts with this Telegram account.`
       );
     } else {
-      await ctx.reply(
-        `This Telegram account is linked with such Grill account:\n${links.map(
-          (link) => `- ${link.substrateAccountId};\n`
-        )}`
-      );
+      let messageText = '';
+      if (linksPersonal.length > 0)
+        messageText += `🙋‍ Your linked Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
+
+      console.dir(linksFollowing, { depth: null });
+      if (linksFollowing.length > 0)
+        messageText += `👀 Your subscribed Grill accounts:${linksFollowing.map(
+          (link) => `\n   🔹 ${link.substrateAccountId}`
+        )}`;
+      await ctx.reply(messageText.replace(/\,/g, ''));
     }
     await ctx.scene.leave();
     return;

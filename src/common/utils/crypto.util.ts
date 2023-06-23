@@ -3,7 +3,7 @@ import { SubsocialApi } from '@subsocial/api';
 import BigNumber from 'bignumber.js';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
-import { u8aToHex } from '@polkadot/util';
+import { hexToU8a, isHex, u8aToHex } from '@polkadot/util';
 
 export type DataForSignatureValidation = {
   signature: string;
@@ -32,5 +32,16 @@ export class CryptoUtils {
   substrateAddressToHex(address: string | Uint8Array) {
     const publicKey = decodeAddress(address);
     return u8aToHex(publicKey);
+  }
+
+  isValidSubstrateAddress(address: string) {
+    try {
+      encodeAddress(
+        isHex(address) ? hexToU8a(address) : decodeAddress(address)
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

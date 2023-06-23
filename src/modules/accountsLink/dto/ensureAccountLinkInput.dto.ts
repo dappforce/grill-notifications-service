@@ -4,5 +4,6 @@ export class EnsureAccountLinkInputDto {
   notificationServiceName: NotificationServiceName;
   notificationServiceAccountId: string;
   substrateAccountId: string;
+  following: boolean;
   active?: boolean;
 }

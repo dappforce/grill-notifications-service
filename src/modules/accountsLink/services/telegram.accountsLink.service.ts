@@ -36,6 +36,23 @@ export class TelegramAccountsLinkService {
     private readonly xSocialConfig: xSocialConfig
   ) {}
 
+  async findAllActiveByTgAccountId({
+    accountId,
+    following
+  }: {
+    accountId: string;
+    following: boolean;
+  }) {
+    return await this.accountsLinkService.accountsLinkRepository.find({
+      where: {
+        notificationServiceAccountId: { $eq: accountId },
+        notificationServiceName: { $eq: NotificationServiceName.telegram },
+        active: { $eq: true },
+        following: { $eq: following }
+      }
+    });
+  }
+
   getTelegramBotLinkingMessage(
     action: SignedMessageAction,
     substrateAccount: string
@@ -145,14 +162,19 @@ export class TelegramAccountsLinkService {
     return newTmpIdEntity;
   }
 
-  async getActiveLinkedTgAccountsBySubstrateAccount(
-    substrateAccount: string
-  ): Promise<LinkedTgAccountsToSubstrateAccountResponseType> {
+  async getActiveLinkedTgAccountsBySubstrateAccount({
+    substrateAccount,
+    following
+  }: {
+    substrateAccount: string;
+    following: boolean;
+  }): Promise<LinkedTgAccountsToSubstrateAccountResponseType> {
     const links = await this.accountsLinkService.accountsLinkRepository.find({
       where: {
         substrateAccountId: { $eq: substrateAccount },
         notificationServiceName: { $eq: NotificationServiceName.telegram },
-        active: true
+        active: { $eq: true },
+        following: { $eq: following }
       }
     });
 
@@ -211,21 +233,46 @@ export class TelegramAccountsLinkService {
     return entity;
   }
 
+  async processTemporaryLinkingIdOrAddress({
+    telegramAccountData,
+    linkingIdOrAddress
+  }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
+    /**
+     * It means that request came from Telegram bot and user must provide valid Substrate address
+     */
+    if (this.cryptoUtils.isValidSubstrateAddress(linkingIdOrAddress))
+      return this.processFollowingOfSubstrateAddress({
+        telegramAccountData,
+        linkingIdOrAddress
+      });
+
+    /**
+     * It means that request came from API and valid Temporary linking ID must be provided
+     */
+    return this.processTemporaryLinkingId({
+      telegramAccountData,
+      linkingIdOrAddress
+    });
+  }
+
   async processTemporaryLinkingId({
     telegramAccountData,
-    linkingId
+    linkingIdOrAddress
   }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
-    const linkingIdEntity = await this.getTemporaryLinkingIdById(linkingId);
+    const linkingIdEntity = await this.getTemporaryLinkingIdById(
+      linkingIdOrAddress
+    );
 
     if (!linkingIdEntity)
       throw new ValidationError(
-        'Your connection session is expired. Please, go to Grill Notifications setting and run Connection flow again.'
+        'Your connection ID has expired or invalid. Please return to your Grill.chat settings and try again.'
       );
 
     const accountsLink = await this.accountsLinkService.ensureAccountLink({
       notificationServiceName: NotificationServiceName.telegram,
       notificationServiceAccountId: telegramAccountData.accountId.toString(),
       substrateAccountId: linkingIdEntity.substrateAccountId,
+      following: false,
       active: true
     });
 
@@ -236,7 +283,29 @@ export class TelegramAccountsLinkService {
     return accountsLink;
   }
 
-  async unlinkTelegramAccount(
+  /**
+   * Linking Telegram and Substrate accounts via Telegram bot
+   * @param telegramAccountData
+   * @param linkingIdOrAddress
+   */
+  async processFollowingOfSubstrateAddress({
+    telegramAccountData,
+    linkingIdOrAddress
+  }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
+    const accountsLink = await this.accountsLinkService.ensureAccountLink({
+      notificationServiceName: NotificationServiceName.telegram,
+      notificationServiceAccountId: telegramAccountData.accountId.toString(),
+      substrateAccountId: linkingIdOrAddress,
+      following: true,
+      active: true
+    });
+
+    await this.ensureTelegramAccount(telegramAccountData);
+
+    return accountsLink;
+  }
+
+  async unlinkTelegramAccountBySubstrateAccountWithSignedMessage(
     signedMsgWithDetails: string
   ): Promise<UnlinkTelegramAccountResponseDto> {
     const parsedMessageWithDetails =
@@ -250,21 +319,56 @@ export class TelegramAccountsLinkService {
     )
       throw new Error(`Invalid action.`);
 
+    return this.unlinkTelegramAccount({
+      substrateAccount: parsedMessageWithDetails.substrateAccount,
+      following: false
+    });
+  }
+
+  async unlinkTelegramAccountBySubstrateAccountWithAddress({
+    substrateAccount,
+    telegramAccountId
+  }: {
+    substrateAccount: string;
+    telegramAccountId: string;
+  }): Promise<UnlinkTelegramAccountResponseDto> {
+    return this.unlinkTelegramAccount({
+      substrateAccount,
+      telegramAccountId,
+      following: true
+    });
+  }
+
+  async unlinkTelegramAccount({
+    substrateAccount,
+    telegramAccountId,
+    following
+  }: {
+    substrateAccount: string;
+    following: boolean;
+    telegramAccountId?: string;
+  }): Promise<UnlinkTelegramAccountResponseDto> {
     const activeLinks =
       await this.accountsLinkService.accountsLinkRepository.find({
         where: {
           substrateAccountId: {
-            $eq: parsedMessageWithDetails.substrateAccount
+            $eq: substrateAccount
           },
           notificationServiceName: NotificationServiceName.telegram,
-          active: true
+          active: { $eq: true },
+          following: { $eq: following },
+          ...(following && telegramAccountId
+            ? { notificationServiceAccountId: telegramAccountId }
+            : {})
         }
       });
 
     if (!activeLinks || activeLinks.length === 0)
       return {
         success: false,
-        message: `Account ${parsedMessageWithDetails.substrateAccount} doesn't have active connected Telegram accounts.`
+        message: !following
+          ? `Account ${substrateAccount} doesn't have active connected Telegram accounts.`
+          : `You are not subscribed to this address - ${substrateAccount}`
       };
 
     for (const link of activeLinks) {
@@ -276,13 +380,4 @@ export class TelegramAccountsLinkService {
       success: true
     };
   }
-
-  // async deactivateAllLinksByTgAccount(tgAccountId: number) {
-  //   const existingLinks = await this.findAllActiveByTgAccountId(tgAccountId);
-  //
-  //   for (const link of existingLinks) {
-  //     link.active = false;
-  //     await this.accountsLinkRepository.save(link);
-  //   }
-  // }
 }

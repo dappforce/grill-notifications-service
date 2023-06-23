@@ -37,16 +37,6 @@ export class AccountsLinkService {
     });
   }
 
-  async findAllActiveByTgAccountId(id: string) {
-    return await this.accountsLinkRepository.find({
-      where: {
-        notificationServiceAccountId: id,
-        notificationServiceName: NotificationServiceName.telegram,
-        active: true
-      }
-    });
-  }
-
   async createTemporaryLinkingId(
     signedMsgWithDetails: string,
     action: SignedMessageAction
@@ -75,6 +65,7 @@ export class AccountsLinkService {
     notificationServiceName,
     notificationServiceAccountId,
     substrateAccountId,
+    following,
     active
   }: EnsureAccountLinkInputDto) {
     const newAccountsLinkEntity = new AccountsLink();
@@ -83,6 +74,7 @@ export class AccountsLinkService {
     newAccountsLinkEntity.notificationServiceName = notificationServiceName;
     newAccountsLinkEntity.substrateAccountId = substrateAccountId;
     newAccountsLinkEntity.active = active;
+    newAccountsLinkEntity.following = following;
     newAccountsLinkEntity.createdAt = new Date();
 
     const entity = await this.accountsLinkRepository.save(
@@ -95,8 +87,46 @@ export class AccountsLinkService {
     notificationServiceName,
     notificationServiceAccountId,
     substrateAccountId,
+    following,
     active
   }: EnsureAccountLinkInputDto) {
+    if (!following) {
+      const allLinksForSubstrateAccount =
+        await this.accountsLinkRepository.find({
+          where: {
+            notificationServiceName: {
+              $eq: notificationServiceName
+            },
+            substrateAccountId: { $eq: substrateAccountId },
+            active: { $eq: true },
+            following: { $eq: following }
+          }
+        });
+      const allLinksForNotificationsServiceAccount =
+        await this.accountsLinkRepository.find({
+          where: {
+            notificationServiceName: {
+              $eq: notificationServiceName
+            },
+            notificationServiceAccountId: {
+              $eq: notificationServiceAccountId.toString()
+            },
+            active: { $eq: true },
+            following: { $eq: following }
+          }
+        });
+
+      for (const link of allLinksForSubstrateAccount) {
+        link.active = false;
+        await this.accountsLinkRepository.save(link);
+      }
+
+      for (const link of allLinksForNotificationsServiceAccount) {
+        link.active = false;
+        await this.accountsLinkRepository.save(link);
+      }
+    }
+
     const existingEntity = await this.accountsLinkRepository.findOne({
       where: {
         notificationServiceAccountId: {
@@ -105,41 +135,10 @@ export class AccountsLinkService {
         notificationServiceName: {
           $eq: notificationServiceName
         },
-        substrateAccountId: { $eq: substrateAccountId }
-      }
-    });
-
-    const allLinksForSubstrateAccount = await this.accountsLinkRepository.find({
-      where: {
-        notificationServiceName: {
-          $eq: notificationServiceName
-        },
         substrateAccountId: { $eq: substrateAccountId },
-        active: true
+        following: { $eq: following }
       }
     });
-    const allLinksForNotificationsServiceAccount =
-      await this.accountsLinkRepository.find({
-        where: {
-          notificationServiceName: {
-            $eq: notificationServiceName
-          },
-          notificationServiceAccountId: {
-            $eq: notificationServiceAccountId.toString()
-          },
-          active: true
-        }
-      });
-
-    for (const link of allLinksForSubstrateAccount) {
-      link.active = false;
-      await this.accountsLinkRepository.save(link);
-    }
-
-    for (const link of allLinksForNotificationsServiceAccount) {
-      link.active = false;
-      await this.accountsLinkRepository.save(link);
-    }
 
     if (existingEntity) {
       existingEntity.active = active;
@@ -151,6 +150,7 @@ export class AccountsLinkService {
         notificationServiceName,
         notificationServiceAccountId,
         substrateAccountId,
+        following,
         active
       });
     }

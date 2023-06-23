@@ -48,7 +48,7 @@ describe('AppController (e2e)', () => {
     if (!keyPair) return;
 
     const payloadLink = sortObj({
-      action: 'TELEGRAM_ACCOUNT_LINK'
+      action: 'TELEGRAM_ACCOUNT_LINK',
     });
 
     const payloadUnlink = sortObj({
@@ -58,10 +58,21 @@ describe('AppController (e2e)', () => {
     const signedPayloadLink = keyPair.sign(
       stringToU8a(JSON.stringify(payloadLink))
     );
+    const signedPayloadLink2 = keyPair.sign(
+        stringToU8a(JSON.stringify(payloadLink))
+    );
+    const signedPayloadLink3 = keyPair.sign(
+        stringToU8a(JSON.stringify(payloadLink))
+    );
     const signedPayloadUnLink = keyPair.sign(
       stringToU8a(JSON.stringify(payloadUnlink))
     );
 
+    console.log(u8aToHex(signedPayloadLink))
+    console.log(u8aToHex(signedPayloadLink2))
+    console.log(u8aToHex(signedPayloadLink3))
+
+    console.log('===========')
     const signatureHexLink = u8aToHex(signedPayloadLink);
     const signatureHexUnLink = u8aToHex(signedPayloadUnLink);
 

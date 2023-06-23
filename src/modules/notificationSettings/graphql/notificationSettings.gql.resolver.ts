@@ -22,6 +22,7 @@ export class NotificationSettingsGqlResolver {
   ) {}
 
   @Query(() => NotificationSettings)
+  @UseGuards(AdminGqlGuard)
   async notificationSettingsByAccountId(@Args('id') id: string) {
     return this.notificationSettingsService.findByAccountId(id);
   }
