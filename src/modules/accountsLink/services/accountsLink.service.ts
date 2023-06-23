@@ -46,10 +46,10 @@ export class AccountsLinkService {
         decodeURIComponent(signedMsgWithDetails)
       );
     switch (action) {
-      case SignedMessageAction.TELEGRAM_ACCOUNT_LINK:
+      case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
         if (
           parsedMessageWithDetails.payload.action !==
-          SignedMessageAction.TELEGRAM_ACCOUNT_LINK
+          SignedMessageAction.LINK_TELEGRAM_ACCOUNT
         )
           throw new Error(`Invalid action.`);
 
@@ -89,7 +89,10 @@ export class AccountsLinkService {
     substrateAccountId,
     following,
     active
-  }: EnsureAccountLinkInputDto) {
+  }: EnsureAccountLinkInputDto): Promise<{
+    existing: boolean;
+    entity: AccountsLink;
+  }> {
     if (!following) {
       const allLinksForSubstrateAccount =
         await this.accountsLinkRepository.find({
@@ -143,16 +146,22 @@ export class AccountsLinkService {
     if (existingEntity) {
       existingEntity.active = active;
       await this.accountsLinkRepository.save(existingEntity);
-      return existingEntity;
+      return {
+        existing: true,
+        entity: existingEntity
+      };
       console.log('Accounts are already linked');
     } else if (!existingEntity && active) {
-      return await this.createAccountsLink({
-        notificationServiceName,
-        notificationServiceAccountId,
-        substrateAccountId,
-        following,
-        active
-      });
+      return {
+        existing: false,
+        entity: await this.createAccountsLink({
+          notificationServiceName,
+          notificationServiceAccountId,
+          substrateAccountId,
+          following,
+          active
+        })
+      };
     }
   }
 
@@ -177,7 +186,7 @@ export class AccountsLinkService {
 
     if (
       !this.cryptoUtils.isValidSignature({
-        account: data.substrateAccount,
+        account: data.address,
         signature: data.signature,
         message: JSON.stringify(sortObj(data.payload))
       })

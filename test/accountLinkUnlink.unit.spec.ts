@@ -10,14 +10,14 @@ type TgAccountLinkingMessage = {
     message: string;
   };
   action: string;
-  substrateAccount: string;
+  address: string;
   signature: string;
 };
 
 export const isValidSignature = (signedMessage: TgAccountLinkingMessage) => {
-  const { payload, signature, action, substrateAccount } = signedMessage;
+  const { payload, signature, action, address } = signedMessage;
   const sortedMessage = JSON.stringify(sortObj(payload));
-  return signatureVerify(sortedMessage, signature, substrateAccount).isValid;
+  return signatureVerify(sortedMessage, signature, address).isValid;
 };
 
 async function getKeyring() {
@@ -35,7 +35,7 @@ async function createKeyringPairFromSecret(secretKey: string) {
   return signer;
 }
 
-describe('AppController (e2e)', () => {
+describe('Link unlink Accounts', () => {
   let keyPair: KeyringPair | null = null;
 
   beforeEach(async () => {
@@ -48,44 +48,33 @@ describe('AppController (e2e)', () => {
     if (!keyPair) return;
 
     const payloadLink = sortObj({
-      action: 'TELEGRAM_ACCOUNT_LINK',
+      action: 'LINK_TELEGRAM_ACCOUNT'
     });
 
     const payloadUnlink = sortObj({
-      action: 'TELEGRAM_ACCOUNT_UNLINK'
+      action: 'UNLINK_TELEGRAM_ACCOUNT'
     });
 
     const signedPayloadLink = keyPair.sign(
       stringToU8a(JSON.stringify(payloadLink))
     );
-    const signedPayloadLink2 = keyPair.sign(
-        stringToU8a(JSON.stringify(payloadLink))
-    );
-    const signedPayloadLink3 = keyPair.sign(
-        stringToU8a(JSON.stringify(payloadLink))
-    );
     const signedPayloadUnLink = keyPair.sign(
       stringToU8a(JSON.stringify(payloadUnlink))
     );
 
-    console.log(u8aToHex(signedPayloadLink))
-    console.log(u8aToHex(signedPayloadLink2))
-    console.log(u8aToHex(signedPayloadLink3))
-
-    console.log('===========')
     const signatureHexLink = u8aToHex(signedPayloadLink);
     const signatureHexUnLink = u8aToHex(signedPayloadUnLink);
 
     const msgForUserLink = {
-      action: 'TELEGRAM_ACCOUNT_LINK',
-      substrateAccount: encodeAddress(u8aToHex(keyPair.publicKey), 28),
+      action: 'LINK_TELEGRAM_ACCOUNT',
+      address: encodeAddress(u8aToHex(keyPair.publicKey), 28),
       signature: signatureHexLink,
       payload: payloadLink
     };
 
     const msgForUserUnLink = {
-      action: 'TELEGRAM_ACCOUNT_UNLINK',
-      substrateAccount: encodeAddress(u8aToHex(keyPair.publicKey), 28),
+      action: 'UNLINK_TELEGRAM_ACCOUNT',
+      address: encodeAddress(u8aToHex(keyPair.publicKey), 28),
       signature: signatureHexUnLink,
       payload: payloadUnlink
     };

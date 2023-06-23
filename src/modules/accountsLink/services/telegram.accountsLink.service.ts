@@ -21,6 +21,7 @@ import { xSocialConfig } from '../../../config';
 import * as crypto from 'crypto';
 import { ValidationError } from '@nestjs/apollo';
 import { UnlinkTelegramAccountResponseDto } from '../graphql/unlinkTelegramAccount.response.dto';
+import { ProcessLinkingIdOrAddressResponseTelegramDto } from '../dto/processLinkingIdOrAddressResponse.telegram.dto';
 
 @Injectable()
 export class TelegramAccountsLinkService {
@@ -61,7 +62,7 @@ export class TelegramAccountsLinkService {
     let tpl: SignedMessageWithDetails = {
       action,
       signature: '',
-      substrateAccount:
+      address:
         this.cryptoUtils.substrateAddressToSubsocialFormat(substrateAccount),
       payload: {
         action
@@ -132,10 +133,11 @@ export class TelegramAccountsLinkService {
       await this.accountsLinkService.accountsLinkRepository.find({
         where: {
           substrateAccountId: {
-            $eq: parsedMessageWithDetails.substrateAccount
+            $eq: parsedMessageWithDetails.address
           },
           notificationServiceName: NotificationServiceName.telegram,
-          active: true
+          active: true,
+          following: false
         }
       });
 
@@ -144,18 +146,17 @@ export class TelegramAccountsLinkService {
       existingLinkForSubstrateAccount.length > 0
     )
       throw new ValidationError(
-        `Account ${parsedMessageWithDetails.substrateAccount} already has linked Telegram account`
+        `Account ${parsedMessageWithDetails.address} already has linked Telegram account`
       );
 
     const existingTmpId = await this.getTemporaryLinkingIdBySubstrateAccount(
-      parsedMessageWithDetails.substrateAccount
+      parsedMessageWithDetails.address
     );
     if (existingTmpId) return existingTmpId;
 
     const newTmpIdEntity = new TelegramTemporaryLinkingId();
     newTmpIdEntity.id = crypto.randomUUID();
-    newTmpIdEntity.substrateAccountId =
-      parsedMessageWithDetails.substrateAccount;
+    newTmpIdEntity.substrateAccountId = parsedMessageWithDetails.address;
     newTmpIdEntity.createdAt = new Date();
 
     await this.telegramTemporaryLinkingIdRepository.save(newTmpIdEntity);
@@ -236,7 +237,7 @@ export class TelegramAccountsLinkService {
   async processTemporaryLinkingIdOrAddress({
     telegramAccountData,
     linkingIdOrAddress
-  }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
+  }: ProcessLinkingIdInputTelegramDto): Promise<ProcessLinkingIdOrAddressResponseTelegramDto> {
     /**
      * It means that request came from Telegram bot and user must provide valid Substrate address
      */
@@ -258,7 +259,7 @@ export class TelegramAccountsLinkService {
   async processTemporaryLinkingId({
     telegramAccountData,
     linkingIdOrAddress
-  }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
+  }: ProcessLinkingIdInputTelegramDto): Promise<ProcessLinkingIdOrAddressResponseTelegramDto> {
     const linkingIdEntity = await this.getTemporaryLinkingIdById(
       linkingIdOrAddress
     );
@@ -268,19 +269,44 @@ export class TelegramAccountsLinkService {
         'Your connection ID has expired or invalid. Please return to your Grill.chat settings and try again.'
       );
 
-    const accountsLink = await this.accountsLinkService.ensureAccountLink({
-      notificationServiceName: NotificationServiceName.telegram,
-      notificationServiceAccountId: telegramAccountData.accountId.toString(),
-      substrateAccountId: linkingIdEntity.substrateAccountId,
-      following: false,
-      active: true
-    });
+    const existingFollowingLink =
+      await this.accountsLinkService.accountsLinkRepository.findOne({
+        where: {
+          notificationServiceName: NotificationServiceName.telegram,
+          notificationServiceAccountId:
+            telegramAccountData.accountId.toString(),
+          substrateAccountId: linkingIdEntity.substrateAccountId,
+          following: true,
+          active: true
+        }
+      });
+
+    if (existingFollowingLink)
+      return {
+        existing: true,
+        entity: existingFollowingLink,
+        success: false,
+        message: `You already have an active subscription for address ${linkingIdEntity.substrateAccountId}. Please unsubscribe from this address in the Telegram bot using the command "/unlink ${linkingIdEntity.substrateAccountId}" and try connecting it again in Grill.chat.`
+      };
+
+    const accountsLinkResult = await this.accountsLinkService.ensureAccountLink(
+      {
+        notificationServiceName: NotificationServiceName.telegram,
+        notificationServiceAccountId: telegramAccountData.accountId.toString(),
+        substrateAccountId: linkingIdEntity.substrateAccountId,
+        following: false,
+        active: true
+      }
+    );
 
     await this.ensureTelegramAccount(telegramAccountData);
 
     await this.telegramTemporaryLinkingIdRepository.remove(linkingIdEntity);
 
-    return accountsLink;
+    return {
+      ...accountsLinkResult,
+      success: true
+    };
   }
 
   /**
@@ -291,18 +317,40 @@ export class TelegramAccountsLinkService {
   async processFollowingOfSubstrateAddress({
     telegramAccountData,
     linkingIdOrAddress
-  }: ProcessLinkingIdInputTelegramDto): Promise<AccountsLink> {
-    const accountsLink = await this.accountsLinkService.ensureAccountLink({
-      notificationServiceName: NotificationServiceName.telegram,
-      notificationServiceAccountId: telegramAccountData.accountId.toString(),
-      substrateAccountId: linkingIdOrAddress,
-      following: true,
-      active: true
-    });
+  }: ProcessLinkingIdInputTelegramDto): Promise<ProcessLinkingIdOrAddressResponseTelegramDto> {
+    const existingFollowingLink =
+      await this.accountsLinkService.accountsLinkRepository.findOne({
+        where: {
+          notificationServiceName: NotificationServiceName.telegram,
+          notificationServiceAccountId:
+            telegramAccountData.accountId.toString(),
+          substrateAccountId: linkingIdOrAddress,
+          following: false,
+          active: true
+        }
+      });
+
+    if (existingFollowingLink)
+      return {
+        existing: true,
+        entity: existingFollowingLink,
+        success: false,
+        message: `You already have an active connection to your own account ${linkingIdOrAddress}. Please disconnect this address in Grill.chat and subscribe to it in the Telegram bot using the command "/link ${linkingIdOrAddress}".`
+      };
+
+    const accountsLinkResult = await this.accountsLinkService.ensureAccountLink(
+      {
+        notificationServiceName: NotificationServiceName.telegram,
+        notificationServiceAccountId: telegramAccountData.accountId.toString(),
+        substrateAccountId: linkingIdOrAddress,
+        following: true,
+        active: true
+      }
+    );
 
     await this.ensureTelegramAccount(telegramAccountData);
 
-    return accountsLink;
+    return { ...accountsLinkResult, success: true };
   }
 
   async unlinkTelegramAccountBySubstrateAccountWithSignedMessage(
@@ -315,12 +363,12 @@ export class TelegramAccountsLinkService {
 
     if (
       parsedMessageWithDetails.payload.action !==
-      SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK
+      SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT
     )
       throw new Error(`Invalid action.`);
 
     return this.unlinkTelegramAccount({
-      substrateAccount: parsedMessageWithDetails.substrateAccount,
+      substrateAccount: parsedMessageWithDetails.address,
       following: false
     });
   }

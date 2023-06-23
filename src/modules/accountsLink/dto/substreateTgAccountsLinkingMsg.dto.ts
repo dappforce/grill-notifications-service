@@ -1,27 +1,27 @@
 import z from 'zod';
 
 export enum SignedMessageAction {
-  TELEGRAM_ACCOUNT_LINK = 'TELEGRAM_ACCOUNT_LINK',
-  TELEGRAM_ACCOUNT_UNLINK = 'TELEGRAM_ACCOUNT_UNLINK'
+  LINK_TELEGRAM_ACCOUNT = 'LINK_TELEGRAM_ACCOUNT',
+  UNLINK_TELEGRAM_ACCOUNT = 'UNLINK_TELEGRAM_ACCOUNT'
 }
 
 const zodSignedMessageActionEnum = z.nativeEnum(SignedMessageAction);
 
 export const linkSubstrateTg = z.object({
-  action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_LINK),
-  substrateAccount: z.string(),
+  action: z.literal(zodSignedMessageActionEnum.enum.LINK_TELEGRAM_ACCOUNT),
+  address: z.string(),
   signature: z.string(),
   payload: z.object({
-    action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_LINK)
+    action: z.literal(zodSignedMessageActionEnum.enum.LINK_TELEGRAM_ACCOUNT)
   })
 });
 
 export const unlinkSubstrateTg = z.object({
-  action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_UNLINK),
-  substrateAccount: z.string(),
+  action: z.literal(zodSignedMessageActionEnum.enum.UNLINK_TELEGRAM_ACCOUNT),
+  address: z.string(),
   signature: z.string(),
   payload: z.object({
-    action: z.literal(zodSignedMessageActionEnum.enum.TELEGRAM_ACCOUNT_UNLINK)
+    action: z.literal(zodSignedMessageActionEnum.enum.UNLINK_TELEGRAM_ACCOUNT)
   })
 });
 

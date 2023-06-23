@@ -33,7 +33,7 @@ export class AccountsLinkingGqlResolver {
     @Args('substrateAccount') substrateAccount: string
   ) {
     return this.telegramAccountsLinkService.getTelegramBotLinkingMessage(
-      SignedMessageAction.TELEGRAM_ACCOUNT_LINK,
+      SignedMessageAction.LINK_TELEGRAM_ACCOUNT,
       substrateAccount
     );
   }
@@ -44,7 +44,7 @@ export class AccountsLinkingGqlResolver {
     @Args('substrateAccount') substrateAccount: string
   ) {
     return this.telegramAccountsLinkService.getTelegramBotLinkingMessage(
-      SignedMessageAction.TELEGRAM_ACCOUNT_UNLINK,
+      SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT,
       substrateAccount
     );
   }
@@ -69,7 +69,7 @@ export class AccountsLinkingGqlResolver {
       id: (
         await this.accountsLinkService.createTemporaryLinkingId(
           signedMessageWithDetails,
-          SignedMessageAction.TELEGRAM_ACCOUNT_LINK
+          SignedMessageAction.LINK_TELEGRAM_ACCOUNT
         )
       ).id
     };

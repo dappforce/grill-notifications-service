@@ -63,7 +63,7 @@ export class StatusScene {
     } else {
       let messageText = '';
       if (linksPersonal.length > 0)
-        messageText += `🙋‍ Your linked Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
+        messageText += `🙋‍ Your own connected Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
 
       console.dir(linksFollowing, { depth: null });
       if (linksFollowing.length > 0)

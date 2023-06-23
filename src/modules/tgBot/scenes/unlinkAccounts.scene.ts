@@ -10,7 +10,7 @@ import {
   Action,
   Sender
 } from 'nestjs-telegraf';
-import { LINK_ACCOUNTS_SCENE_ID } from '../../../app.constants';
+import { UNLINK_ACCOUNTS_SCENE_ID } from '../../../app.constants';
 import { Context } from '../../../interfaces/context.interface';
 
 import { Markup } from 'telegraf';
@@ -19,8 +19,8 @@ import { AccountsLinkService } from '../../accountsLink/services/accountsLink.se
 import { xSocialConfig } from '../../../config';
 import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 
-@Scene(LINK_ACCOUNTS_SCENE_ID)
-export class LinkAccountsScene {
+@Scene(UNLINK_ACCOUNTS_SCENE_ID)
+export class UnlinkAccountsScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
     private accountsLinkService: AccountsLinkService,
@@ -37,20 +37,12 @@ export class LinkAccountsScene {
     @Sender('phone_number') phoneNumber: string,
     @Sender('id') userId: number
   ): Promise<string> {
-    console.log(ctx.state.command.args);
     let processingMessage = null;
-    const linkingTmpIdOrAddress = ctx.state.command.args[0];
+    const substrateAddressForUnlinking = ctx.state.command.args[0];
 
-    if (!linkingTmpIdOrAddress) {
+    if (!substrateAddressForUnlinking) {
       await ctx.reply(
-        `Let's rock! Go to your Profile settings in grill.chat application, find "Connect Telegram" button and copy 
-        Telegram bot linking message. Than give it to me and I'll link your Grill account with current Telegram account.`,
-        Markup.inlineKeyboard([
-          Markup.button.url(
-            'Go to Grill',
-            this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF
-          )
-        ])
+        `⚠️ The address has not been provided along with the command.`
       );
       await ctx.scene.leave();
       return;
@@ -65,21 +57,22 @@ export class LinkAccountsScene {
     ctx.session.__scenes.state['processingMessageId'] =
       processingMessage.message_id;
 
-    const accountsLinkingResult =
-      await this.telegramAccountsLinkService.processTemporaryLinkingIdOrAddress(
+    const unlinkResult =
+      await this.telegramAccountsLinkService.unlinkTelegramAccountBySubstrateAccountWithAddress(
         {
-          telegramAccountData: {
-            accountId: userId.toString(),
-            phoneNumber: phoneNumber,
-            userName: userName,
-            firstName: firstName,
-            lastName: lastName
-          },
-          linkingIdOrAddress: linkingTmpIdOrAddress
+          substrateAccount: substrateAddressForUnlinking,
+          telegramAccountId: userId.toString()
         }
       );
 
-    ctx.session.__scenes.state['accountsLinkingResult'] = accountsLinkingResult;
+    if (!unlinkResult.success) {
+      await ctx.reply(`⚠️ ${unlinkResult.message}`);
+      ctx.session.__scenes.state['unlinkError'] = true;
+    } else {
+      ctx.session.__scenes.state['unlinkedSubstrateAccount'] =
+        substrateAddressForUnlinking;
+      ctx.session.__scenes.state['unlinkError'] = false;
+    }
 
     await ctx.deleteMessage(processingMessage.message_id);
     delete ctx.session.__scenes.state['processingMessageId'];
@@ -90,7 +83,7 @@ export class LinkAccountsScene {
   @Action('cancel_processing')
   async onStopCommand(@Ctx() ctx: Context): Promise<void> {
     await ctx.answerCbQuery();
-    delete ctx.session.__scenes.state['accountsLinkingResult'];
+    delete ctx.session.__scenes.state['unlinkedSubstrateAccount'];
     if (ctx.session.__scenes.state['processingMessageId']) {
       await ctx.deleteMessage(
         ctx.session.__scenes.state['processingMessageId']
@@ -103,25 +96,23 @@ export class LinkAccountsScene {
 
   @SceneLeave()
   async onSceneLeave(@Ctx() ctx: Context): Promise<void> {
-    if (ctx.session.__scenes.state['throwCancel']) return;
+    if (
+      ctx.session.__scenes.state['throwCancel'] ||
+      ctx.session.__scenes.state['unlinkError']
+    )
+      return;
     if (ctx.session.__scenes.state['processingMessageId']) {
       await ctx.deleteMessage(
         ctx.session.__scenes.state['processingMessageId']
       );
       delete ctx.session.__scenes.state['processingMessageId'];
     }
-    if (ctx.session.__scenes.state['accountsLinkingResult']) {
-      if (ctx.session.__scenes.state['accountsLinkingResult'].success) {
-        await ctx.reply(
-          `✅ Account linked successfully with Grill account ${ctx.session.__scenes.state['accountsLinkingResult'].entity.substrateAccountId}.`
-        );
-      } else {
-        await ctx.reply(
-          `⚠️ ${ctx.session.__scenes.state['accountsLinkingResult'].message}.`
-        );
-      }
+    if (ctx.session.__scenes.state['unlinkedSubstrateAccount']) {
+      await ctx.reply(
+        `✅ Account ${ctx.session.__scenes.state['unlinkedSubstrateAccount']} unlinked successfully.`
+      );
     } else {
-      await ctx.reply(`✅Accounts linked successfully.`);
+      await ctx.reply(`✅Accounts unlinked successfully.`);
     }
   }
 }

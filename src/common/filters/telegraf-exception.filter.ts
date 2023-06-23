@@ -11,10 +11,12 @@ export class TelegrafExceptionFilter implements ExceptionFilter {
     const ctx = telegrafHost.getContext<Context>();
     if (!ctx || !ctx.replyWithHTML) return;
     if (ctx.session.__scenes.state['processingMessageId']) {
-      await ctx.deleteMessage(
-        ctx.session.__scenes.state['processingMessageId']
-      );
-      delete ctx.session.__scenes.state['processingMessageId'];
+      try {
+        await ctx.deleteMessage(
+          ctx.session.__scenes.state['processingMessageId']
+        );
+        delete ctx.session.__scenes.state['processingMessageId'];
+      } catch (e) {}
     }
     await ctx.replyWithHTML(`<b> ⚠️ Error</b>: ${exception.message}`);
   }
