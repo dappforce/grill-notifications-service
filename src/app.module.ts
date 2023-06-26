@@ -19,6 +19,8 @@ import { SquidDataSubscriptionStatus } from './modules/dataProviders/typeorm/squ
 import { TelegramAccount } from './modules/accountsLink/typeorm/telegramAccount.entity';
 import { TelegramTemporaryLinkingId } from './modules/accountsLink/typeorm/telegramTemporaryLinkingId.entity';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import { SignatureNonceModule } from './modules/signatureNonce/signatureNonce.module';
+import { SignatureNonce } from './modules/signatureNonce/typeorm/signatureNonce.entity';
 
 @Module({
   imports: [
@@ -38,17 +40,7 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
       autoSchemaFile: './src/schema.gql',
       driver: ApolloDriver,
       playground: true,
-      context: ({ req }) => ({ headers: req.headers }),
-      // @ts-ignore
-      // formatError: (error: GraphQLError, en) => {
-      //   // console.dir(en, {depth: null})
-      //   const graphQLFormattedError: GraphQLFormattedError = {
-      //     message:
-      //     // @ts-ignore
-      //       error?.extensions?.exception?.response?.message || error?.message
-      //   };
-      //   return graphQLFormattedError;
-      // }
+      context: ({ req }) => ({ headers: req.headers })
     }),
     TypeOrmModule.forRootAsync({
       inject: [xSocialConfig],
@@ -58,14 +50,16 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
         synchronize: false,
         useUnifiedTopology: true,
         entities: [
-          NotificationSettings,
-          AccountsLink,
-          TelegramAccount,
           TelegramTemporaryLinkingId,
-          SquidDataSubscriptionStatus
+          SquidDataSubscriptionStatus,
+          NotificationSettings,
+          TelegramAccount,
+          SignatureNonce,
+          AccountsLink
         ]
       })
     }),
+    SignatureNonceModule,
     NotificationSettingsModule,
     AccountsLinkModule,
     NotificationModule,

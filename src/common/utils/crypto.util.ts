@@ -7,7 +7,7 @@ import { hexToU8a, isHex, u8aToHex } from '@polkadot/util';
 
 export type DataForSignatureValidation = {
   signature: string;
-  account: string;
+  address: string;
   message: string;
 };
 
@@ -16,9 +16,9 @@ export class CryptoUtils {
   constructor() {}
 
   isValidSignature(dataForValidation: DataForSignatureValidation) {
-    const { message, signature, account } = dataForValidation;
+    const { message, signature, address } = dataForValidation;
     try {
-      return signatureVerify(message, signature, account).isValid;
+      return signatureVerify(message, signature, address).isValid;
     } catch (e) {
       console.log(e);
       return false;

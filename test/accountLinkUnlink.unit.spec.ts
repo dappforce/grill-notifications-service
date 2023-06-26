@@ -8,6 +8,7 @@ import { sortObj } from 'jsonabc';
 type TgAccountLinkingMessage = {
   payload: {
     message: string;
+    nonce: number;
   };
   action: string;
   address: string;
@@ -48,11 +49,13 @@ describe('Link unlink Accounts', () => {
     if (!keyPair) return;
 
     const payloadLink = sortObj({
-      action: 'LINK_TELEGRAM_ACCOUNT'
+      action: 'LINK_TELEGRAM_ACCOUNT',
+      nonce: 3
     });
 
     const payloadUnlink = sortObj({
-      action: 'UNLINK_TELEGRAM_ACCOUNT'
+      action: 'UNLINK_TELEGRAM_ACCOUNT',
+      nonce: 3
     });
 
     const signedPayloadLink = keyPair.sign(

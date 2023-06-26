@@ -12,6 +12,7 @@ export const linkSubstrateTg = z.object({
   address: z.string(),
   signature: z.string(),
   payload: z.object({
+    nonce: z.number(),
     action: z.literal(zodSignedMessageActionEnum.enum.LINK_TELEGRAM_ACCOUNT)
   })
 });
@@ -21,6 +22,7 @@ export const unlinkSubstrateTg = z.object({
   address: z.string(),
   signature: z.string(),
   payload: z.object({
+    nonce: z.number(),
     action: z.literal(zodSignedMessageActionEnum.enum.UNLINK_TELEGRAM_ACCOUNT)
   })
 });

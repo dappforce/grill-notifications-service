@@ -17,6 +17,7 @@ import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
 import { ProcessLinkingIdInputTelegramDto } from '../dto/processLinkingIdInput.telegram.dto';
 import { LinkedTgAccountsToSubstrateAccountResponseType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
 import { TelegramAccountsLinkService } from './telegram.accountsLink.service';
+import { SignatureNonceService } from '../../signatureNonce/services/signatureNonce.service';
 
 @Injectable()
 export class AccountsLinkService {
@@ -24,6 +25,8 @@ export class AccountsLinkService {
     @InjectRepository(AccountsLink)
     public accountsLinkRepository: MongoRepository<AccountsLink>,
     public cryptoUtils: CryptoUtils,
+    @Inject(forwardRef(() => SignatureNonceService))
+    public signatureNonceService: SignatureNonceService,
     @Inject(forwardRef(() => TelegramAccountsLinkService))
     public telegramAccountsLinkService: TelegramAccountsLinkService
   ) {}
@@ -42,7 +45,7 @@ export class AccountsLinkService {
     action: SignedMessageAction
   ) {
     const parsedMessageWithDetails =
-      this.parseAndVerifySignedMessageWithDetails(
+      await this.parseAndVerifySignedMessageWithDetails(
         decodeURIComponent(signedMsgWithDetails)
       );
     switch (action) {
@@ -53,9 +56,14 @@ export class AccountsLinkService {
         )
           throw new Error(`Invalid action.`);
 
-        return this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
-          parsedMessageWithDetails
+        const linkingId =
+          await this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
+            parsedMessageWithDetails
+          );
+        await this.signatureNonceService.increaseNonceBySubstrateAccountId(
+          parsedMessageWithDetails.address
         );
+        return linkingId;
       default:
         throw new Error('Invalid action value.');
     }
@@ -165,14 +173,14 @@ export class AccountsLinkService {
     }
   }
 
-  parseAndVerifySignedMessageWithDetails(
+  async parseAndVerifySignedMessageWithDetails(
     signedMessageWithDetails: string
-  ): SignedMessageWithDetails {
+  ): Promise<SignedMessageWithDetails> {
     let parsedMessage = null;
     try {
       parsedMessage = JSON.parse(signedMessageWithDetails);
     } catch (e) {
-      throw new Error('Provided invalid message.'); // TODO add error handler
+      throw new Error('Provided invalid message. Json parse'); // TODO add error handler
     }
     if (!signedMessageWithDetails) throw new Error(); // TODO add error handler
 
@@ -185,8 +193,16 @@ export class AccountsLinkService {
     const { data } = messageValidation;
 
     if (
+      !(await this.signatureNonceService.isValidForSubstrateAccount(
+        data.address,
+        data.payload.nonce
+      ))
+    )
+      throw new Error('Provided invalid message. Nonce is invalid.');
+
+    if (
       !this.cryptoUtils.isValidSignature({
-        account: data.address,
+        address: data.address,
         signature: data.signature,
         message: JSON.stringify(sortObj(data.payload))
       })

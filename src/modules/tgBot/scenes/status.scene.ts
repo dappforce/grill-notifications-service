@@ -65,7 +65,6 @@ export class StatusScene {
       if (linksPersonal.length > 0)
         messageText += `🙋‍ Your own connected Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
 
-      console.dir(linksFollowing, { depth: null });
       if (linksFollowing.length > 0)
         messageText += `👀 Your subscribed Grill accounts:${linksFollowing.map(
           (link) => `\n   🔹 ${link.substrateAccountId}`

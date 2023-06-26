@@ -37,7 +37,6 @@ export class LinkAccountsScene {
     @Sender('phone_number') phoneNumber: string,
     @Sender('id') userId: number
   ): Promise<string> {
-    console.log(ctx.state.command.args);
     let processingMessage = null;
     const linkingTmpIdOrAddress = ctx.state.command.args[0];
 

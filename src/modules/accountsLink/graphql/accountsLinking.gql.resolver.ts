@@ -17,8 +17,8 @@ import { UseGuards } from '@nestjs/common';
 import { AdminGqlGuard } from '../../../common/guards/admin.gql.guard';
 import { NotificationSettingsGqlInput } from '../../notificationSettings/graphql/notificationSettings.gql.input';
 import { TelegramAccountsLinkService } from '../services/telegram.accountsLink.service';
-import { CreateTemporaryLinkingIdForTelegramResponseDto } from './createTemporaryLinkingIdForTelegram.response.dto';
-import { UnlinkTelegramAccountResponseDto } from './unlinkTelegramAccount.response.dto';
+import { CreateTemporaryLinkingIdForTelegramResponseDto } from '../dto/createTemporaryLinkingIdForTelegram.response.dto';
+import { UnlinkTelegramAccountResponseDto } from '../dto/unlinkTelegramAccount.response.dto';
 
 @Resolver((of) => AccountsLinkingMessageTemplateGqlType)
 export class AccountsLinkingGqlResolver {
