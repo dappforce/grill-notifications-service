@@ -6,13 +6,15 @@ import { TelegramNotificationSendersHelper } from './notificationSenders/telegra
 import { CommonUtils } from '../../common/utils/common.util';
 import { EnvModule } from '../../config';
 import { CommonNotificationSendersHelper } from './notificationSenders/commonNotificationSenders.helper';
+import { CryptoUtils } from '../../common/utils/crypto.util';
 
 @Module({
   providers: [
     NotificationService,
     TelegramNotificationSendersHelper,
     CommonNotificationSendersHelper,
-    CommonUtils
+    CommonUtils,
+    CryptoUtils
   ],
   imports: [AccountsLinkModule, NotificationSettingsModule, EnvModule],
   exports: [NotificationService]

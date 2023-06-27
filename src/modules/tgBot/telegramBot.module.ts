@@ -7,6 +7,7 @@ import { TgBotSceneHelpers } from './scenes/utils';
 import { LinkAccountsScene } from './scenes/linkAccounts.scene';
 import { StatusScene } from './scenes/status.scene';
 import { UnlinkAccountsScene } from './scenes/unlinkAccounts.scene';
+import { CryptoUtils } from '../../common/utils/crypto.util';
 
 @Module({
   providers: [
@@ -14,7 +15,8 @@ import { UnlinkAccountsScene } from './scenes/unlinkAccounts.scene';
     LinkAccountsScene,
     UnlinkAccountsScene,
     StatusScene,
-    TgBotSceneHelpers
+    TgBotSceneHelpers,
+    CryptoUtils
   ],
   imports: [AccountsLinkModule, NotificationSettingsModule, EnvModule]
 })

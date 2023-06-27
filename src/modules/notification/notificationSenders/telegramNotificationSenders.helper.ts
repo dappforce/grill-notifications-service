@@ -10,6 +10,7 @@ import { CommonUtils } from '../../../common/utils/common.util';
 import { InlineKeyboardMarkup } from 'typegram';
 import { xSocialConfig } from '../../../config';
 import { CommonNotificationSendersHelper } from './commonNotificationSenders.helper';
+import { CryptoUtils } from '../../../common/utils/crypto.util';
 
 @Injectable()
 export class TelegramNotificationSendersHelper {
@@ -17,8 +18,8 @@ export class TelegramNotificationSendersHelper {
     @InjectBot(GRILL_NOTIFICATIONS_BOT_NAME)
     private bot: Telegraf<TelegrafContext>,
     private commonUtils: CommonUtils,
-    private commonNotificationSendersHelper: CommonNotificationSendersHelper,
-    private readonly xSocialConfig: xSocialConfig
+    private cryptoUtils: CryptoUtils,
+    private commonNotificationSendersHelper: CommonNotificationSendersHelper
   ) {}
 
   async sendMessageTelegramBot(
@@ -78,7 +79,10 @@ export class TelegramNotificationSendersHelper {
       triggerData.post.parentPost.summary || triggerData.post.parentPost.body;
 
     const replyPostText = triggerData.post.summary || triggerData.post.body;
-    return `↪️ Someone replied to your message${
+    const name = this.cryptoUtils.generateRandomName(
+      triggerData.post.ownedByAccount.id
+    );
+    return `↪️ ${name || 'Someone'} replied to your message ${
       originPostText ? `( ${originPostText} )` : ''
     }${replyPostText ? `:\n"${replyPostText}"` : '.'}`;
   }
@@ -90,11 +94,19 @@ export class TelegramNotificationSendersHelper {
       triggerData.extension.parentPost.summary ||
       triggerData.extension.parentPost.body;
 
+    const name = this.cryptoUtils.generateRandomName(
+      triggerData.extension.parentPost.ownedByAccount.id
+    );
+
     return `🤑 You received a donation of ${this.commonUtils.decorateDonationAmount(
       triggerData.extension.amount,
       triggerData.extension.decimals
     )} ${triggerData.extension.token}${
-      postText ? ` with the following message: \n"${postText}".` : '!'
+      postText
+        ? ` ${
+            name ? `from ${name} ` : ''
+          } with the following message: \n"${postText}".`
+        : '!'
     }
     `;
   }

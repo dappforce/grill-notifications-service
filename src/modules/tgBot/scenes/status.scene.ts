@@ -5,11 +5,13 @@ import { Context } from '../../../interfaces/context.interface';
 import { Markup } from 'telegraf';
 import { TgBotSceneHelpers } from './utils';
 import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
+import { CryptoUtils } from '../../../common/utils/crypto.util';
 
 @Scene(LINK_STATUS_SCENE_ID)
 export class StatusScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
+    private cryptoUtils: CryptoUtils,
     private telegramAccountsLinkService: TelegramAccountsLinkService
   ) {}
 
@@ -46,11 +48,16 @@ export class StatusScene {
     } else {
       let messageText = '';
       if (linksPersonal.length > 0)
-        messageText += `🙋‍ Your Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
+        messageText += `🙋‍ Your Grill account:\n   🔹 ${this.tgBotSceneHelpers.getNameWithAddressOrAddress(
+          linksPersonal[0].substrateAccountId
+        )}\n\n`;
 
       if (linksFollowing.length > 0)
         messageText += `👀 Followed Grill accounts:${linksFollowing.map(
-          (link) => `\n   🔹 ${link.substrateAccountId}`
+          (link) =>
+            `\n   🔹 ${this.tgBotSceneHelpers.getNameWithAddressOrAddress(
+              link.substrateAccountId
+            )}`
         )}`;
       await ctx.reply(messageText.replace(/\,/g, ''));
     }
