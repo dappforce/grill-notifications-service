@@ -36,14 +36,19 @@ export class TelegramNotificationSendersHelper {
         await this.bot.telegram.sendMessage(
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToCommentReplyCreated(triggerData),
-          {
-            parse_mode: 'MarkdownV2',
-            reply_markup: checkUrl
-              ? this.getKeyboardWithRedirectInlineButton([
-                  { text: 'Check here 👉', url: checkUrl }
-                ])
-              : undefined
-          }
+          checkUrl
+            ? this.getKeyboardWithRedirectInlineButton([
+                { text: 'Check here 👉', url: checkUrl }
+              ])
+            : undefined
+          // {
+          //   parse_mode: 'MarkdownV2',
+          //   reply_markup: checkUrl
+          //     ? this.getKeyboardWithRedirectInlineButton([
+          //         { text: 'Check here 👉', url: checkUrl }
+          //       ])
+          //     : undefined
+          // }
         );
         break;
       }
@@ -63,17 +68,26 @@ export class TelegramNotificationSendersHelper {
         await this.bot.telegram.sendMessage(
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToExtensionDonationCreated(triggerData),
-          {
-            parse_mode: 'MarkdownV2',
-            reply_markup: checkUrl
-              ? this.getKeyboardWithRedirectInlineButton([
-                  { text: 'Check donation 👉', url: checkUrl },
-                  ...(txExplorerUrl
-                    ? [{ text: 'Explore transaction 🔎', url: txExplorerUrl }]
-                    : [])
-                ])
-              : undefined
-          }
+          checkUrl
+            ? this.getKeyboardWithRedirectInlineButton([
+                { text: 'Check donation 👉', url: checkUrl },
+                ...(txExplorerUrl
+                  ? [{ text: 'Explore transaction 🔎', url: txExplorerUrl }]
+                  : [])
+              ])
+            : undefined
+
+          // {
+          //   parse_mode: 'MarkdownV2',
+          //       reply_markup: checkUrl
+          //     ? this.getKeyboardWithRedirectInlineButton([
+          //       { text: 'Check donation 👉', url: checkUrl },
+          //       ...(txExplorerUrl
+          //           ? [{ text: 'Explore transaction 🔎', url: txExplorerUrl }]
+          //           : [])
+          //     ])
+          //     : undefined
+          //   }
         );
         break;
       }
@@ -116,11 +130,11 @@ export class TelegramNotificationSendersHelper {
       text: string;
       url: string;
     }[]
-    // ): Markup.Markup<InlineKeyboardMarkup> {
-  ): InlineKeyboardMarkup {
+  ): Markup.Markup<InlineKeyboardMarkup> {
+    // ): InlineKeyboardMarkup {
     return Markup.inlineKeyboard(
       buttonsList.map((btn) => Markup.button.url(btn.text, btn.url))
-    ).reply_markup;
+    );
   }
 
   escapeTelegramMarkdownText(text) {
