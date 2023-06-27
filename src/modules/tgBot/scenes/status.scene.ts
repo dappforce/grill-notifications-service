@@ -46,10 +46,10 @@ export class StatusScene {
     } else {
       let messageText = '';
       if (linksPersonal.length > 0)
-        messageText += `🙋‍ Your own connected Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
+        messageText += `🙋‍ Your Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
 
       if (linksFollowing.length > 0)
-        messageText += `👀 Your following Grill accounts:${linksFollowing.map(
+        messageText += `👀 Followed Grill accounts:${linksFollowing.map(
           (link) => `\n   🔹 ${link.substrateAccountId}`
         )}`;
       await ctx.reply(messageText.replace(/\,/g, ''));
