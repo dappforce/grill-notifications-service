@@ -1,4 +1,4 @@
-import { Command, Ctx, Update, On, Start } from 'nestjs-telegraf';
+import { Command, Ctx, Update, Start } from 'nestjs-telegraf';
 import { UpdateType as TelegrafUpdateType } from 'telegraf/typings/telegram-types';
 import { Context } from '../../../interfaces/context.interface';
 import {

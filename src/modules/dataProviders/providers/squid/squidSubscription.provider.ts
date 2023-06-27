@@ -11,6 +11,7 @@ import {
 import { SquidApiQueryName } from '../../typeorm/squidDataSubscriptionStatus';
 import { DataProvidersService } from '../../services/dataProviders.service';
 import { EventName } from '../../dto/squid/squidEvents.dto';
+import { newLogger } from '@subsocial/utils';
 import {
   squidSubQueryNotificationsShort,
   getSquidQueryNotificationsFull
@@ -19,6 +20,8 @@ import { SquidHelper } from './squid.helper';
 
 @Injectable()
 export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
+  private logger = newLogger('Squid Subscription Data Provider');
+
   constructor(
     @Inject('GraphqlWsClient') private graphqlWsClient: GraphqlWsClient,
     private notificationService: NotificationService,
@@ -36,7 +39,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
       },
       {
         next: async (data) => {
-          console.log(`New squid status:`);
+          this.logger.info(`New squid status:`);
           const notProcessedSubData = (await this.filterSubscriptionData(
             SquidApiQueryName.notifications,
             <Array<SquidSubscriptionNotificationsResponseDto>>(
@@ -44,12 +47,12 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
             )
           )) as Array<SquidSubscriptionNotificationsResponseDto>;
 
-          console.log(
+          this.logger.info(
             'RAW subscription data :: length - ',
             (<Array<SquidNotificationsResponseDto>>data.data.notifications)
               .length
           );
-          console.log(
+          this.logger.info(
             'filtered subscription data by blockNumber :: length - ',
             notProcessedSubData.length
           );
@@ -70,7 +73,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
               fullData.notifications
             );
 
-          console.log(
+          this.logger.info(
             'filtered subscription data by blockNumber without wrappers :: length - ',
             notProcessedSubDataWithoutWrappers.length
           );
@@ -88,11 +91,11 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
           });
         },
         error: (error) => {
-          console.error('error', error);
+          this.logger.error('error', error);
           console.dir(error, { depth: null });
         },
         complete: () => {
-          console.log('done!');
+          this.logger.info('done!');
         }
       }
     );

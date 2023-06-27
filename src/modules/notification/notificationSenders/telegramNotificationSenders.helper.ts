@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectBot } from 'nestjs-telegraf';
-import { GrillNotificationsBotName } from '../../../app.constants';
+import { GRILL_NOTIFICATIONS_BOT_NAME } from '../../../app.constants';
 import { Markup, Telegraf, Format } from 'telegraf';
 import { TelegrafContext } from '../../../interfaces/context.interface';
 import { NotificationEventDataForSubstrateAccountDto } from '../dto/notificationEventTriggerData.dto';
@@ -14,7 +14,7 @@ import { CommonNotificationSendersHelper } from './commonNotificationSenders.hel
 @Injectable()
 export class TelegramNotificationSendersHelper {
   constructor(
-    @InjectBot(GrillNotificationsBotName)
+    @InjectBot(GRILL_NOTIFICATIONS_BOT_NAME)
     private bot: Telegraf<TelegrafContext>,
     private commonUtils: CommonUtils,
     private commonNotificationSendersHelper: CommonNotificationSendersHelper,
@@ -27,12 +27,10 @@ export class TelegramNotificationSendersHelper {
   ) {
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated: {
-        let checkUrl: string | undefined = undefined;
-        try {
-          checkUrl = `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`;
-        } catch (e) {
-          console.log(e);
-        }
+        let checkUrl =
+          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
+            triggerData
+          );
         await this.bot.telegram.sendMessage(
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToCommentReplyCreated(triggerData),
@@ -41,25 +39,15 @@ export class TelegramNotificationSendersHelper {
                 { text: 'Check here 👉', url: checkUrl }
               ])
             : undefined
-          // {
-          //   parse_mode: 'MarkdownV2',
-          //   reply_markup: checkUrl
-          //     ? this.getKeyboardWithRedirectInlineButton([
-          //         { text: 'Check here 👉', url: checkUrl }
-          //       ])
-          //     : undefined
-          // }
         );
         break;
       }
 
       case EventName.ExtensionDonationCreated: {
-        let checkUrl: string | undefined = undefined;
-        try {
-          checkUrl = `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`;
-        } catch (e) {
-          console.log(e);
-        }
+        let checkUrl =
+          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
+            triggerData
+          );
         const txExplorerUrl =
           this.commonNotificationSendersHelper.createTxExplorerUrlForDonation(
             triggerData.extension.txHash,
@@ -72,22 +60,10 @@ export class TelegramNotificationSendersHelper {
             ? this.getKeyboardWithRedirectInlineButton([
                 { text: 'Check donation 👉', url: checkUrl },
                 ...(txExplorerUrl
-                  ? [{ text: 'Explore transaction 🔎', url: txExplorerUrl }]
+                  ? [{ text: 'Explore tx 🧾', url: txExplorerUrl }]
                   : [])
               ])
             : undefined
-
-          // {
-          //   parse_mode: 'MarkdownV2',
-          //       reply_markup: checkUrl
-          //     ? this.getKeyboardWithRedirectInlineButton([
-          //       { text: 'Check donation 👉', url: checkUrl },
-          //       ...(txExplorerUrl
-          //           ? [{ text: 'Explore transaction 🔎', url: txExplorerUrl }]
-          //           : [])
-          //     ])
-          //     : undefined
-          //   }
         );
         break;
       }
@@ -102,11 +78,9 @@ export class TelegramNotificationSendersHelper {
       triggerData.post.parentPost.summary || triggerData.post.parentPost.body;
 
     const replyPostText = triggerData.post.summary || triggerData.post.body;
-    return this.escapeTelegramMarkdownText(
-      `↪️ Someone replied to your message${
-        originPostText ? `( ${originPostText} )` : ''
-      }${replyPostText ? `:\n"${replyPostText}"` : '.'}`
-    );
+    return `↪️ Someone replied to your message${
+      originPostText ? `( ${originPostText} )` : ''
+    }${replyPostText ? `:\n"${replyPostText}"` : '.'}`;
   }
 
   getTextToExtensionDonationCreated(

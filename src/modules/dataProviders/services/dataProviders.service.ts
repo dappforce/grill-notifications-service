@@ -1,7 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository, Repository } from 'typeorm';
-import { xSocialConfig } from '../../../config';
 import {
   SquidApiQueryName,
   SquidDataSubscriptionStatus
@@ -13,7 +12,7 @@ export class DataProvidersService {
   constructor(
     @InjectRepository(SquidDataSubscriptionStatus)
     public squidDataSubscriptionStatusRepository: MongoRepository<SquidDataSubscriptionStatus>,
-    public subsocialApiProvider: SubsocialApi,
+    public subsocialApiProvider: SubsocialApi
   ) {}
 
   async getOrCreateStatusByQueryName({

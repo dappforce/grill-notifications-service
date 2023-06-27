@@ -1,15 +1,10 @@
-import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Client as GraphqlWsClient } from 'graphql-ws';
+import { Injectable } from '@nestjs/common';
 import { NotificationService } from '../../../notification/services/notification.service';
 import {
-  SquidContentExtensionSchemaId,
   SquidActivitiesResponseDto,
   SquidNotificationsResponseDto,
-  SquidSubscriptionResponseDto
 } from '../../dto/squid/squidResponse.dto';
 import { SquidApiQueryName } from '../../typeorm/squidDataSubscriptionStatus';
-import { DataProvidersService } from '../../services/dataProviders.service';
-import { EventName } from '../../dto/squid/squidEvents.dto';
 import axios from 'axios';
 import { xSocialConfig } from '../../../../config';
 
@@ -24,9 +19,7 @@ type SquidApiResponse<Q, R> = Q extends SquidApiQueryName.notifications
 @Injectable()
 export class SquidHelper {
   constructor(
-    @Inject('GraphqlWsClient') private graphqlWsClient: GraphqlWsClient,
     private notificationService: NotificationService,
-    public dataProvidersService: DataProvidersService,
     private readonly xSocialConfig: xSocialConfig
   ) {}
   async runSquidApiQuery<

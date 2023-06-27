@@ -1,23 +1,15 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 import { NotificationEventDataForSubstrateAccountDto } from '../dto/notificationEventTriggerData.dto';
 import { xSocialConfig } from '../../../config';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
 import { NotificationSettingsService } from '../../notificationSettings/services/notificationSettings.service';
-import {
-  AccountsLink,
-  NotificationServiceName
-} from '../../accountsLink/typeorm/accountsLink.entity';
-import {
-  NotificationSettings,
-  NotificationSubscription
-} from '../../notificationSettings/typeorm/notificationSettings.entity';
+import { NotificationServiceName } from '../../accountsLink/typeorm/accountsLink.entity';
+import { NotificationSubscription } from '../../notificationSettings/typeorm/notificationSettings.entity';
 
 import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf } from 'telegraf';
 import { TelegrafContext } from '../../../interfaces/context.interface';
-import { GrillNotificationsBotName } from '../../../app.constants';
+import { GRILL_NOTIFICATIONS_BOT_NAME } from '../../../app.constants';
 import { TelegramNotificationSendersHelper } from '../notificationSenders/telegramNotificationSenders.helper';
 import { AccountNotificationData } from '../dto/types';
 
@@ -28,7 +20,8 @@ export class NotificationService {
     private readonly accountsLinkService: AccountsLinkService,
     private readonly notificationSettingsService: NotificationSettingsService,
     private readonly telegramNotificationSendersHelper: TelegramNotificationSendersHelper,
-    @InjectBot(GrillNotificationsBotName) private bot: Telegraf<TelegrafContext>
+    @InjectBot(GRILL_NOTIFICATIONS_BOT_NAME)
+    private bot: Telegraf<TelegrafContext>
   ) {}
 
   async handleNotificationEventForSubstrateAccount(

@@ -1,12 +1,8 @@
 import {
-  Command,
   Ctx,
-  Hears,
   Scene,
   SceneEnter,
   SceneLeave,
-  Message,
-  On,
   Action,
   Sender
 } from 'nestjs-telegraf';

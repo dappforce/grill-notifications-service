@@ -1,13 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository, Repository } from 'typeorm';
-import { xSocialConfig } from '../../../config';
 import {
   NotificationSettings,
   NotificationSubscription
 } from '../typeorm/notificationSettings.entity';
 import { NotificationSettingsGqlInput } from '../graphql/notificationSettings.gql.input';
-import { NotificationSettingsGqlType } from '../graphql/notificationSettings.gql.type';
 
 @Injectable()
 export class NotificationSettingsService {

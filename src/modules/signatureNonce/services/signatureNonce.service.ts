@@ -19,18 +19,18 @@ export class SignatureNonceService {
   async getOrCreateNonceBySubstrateAccountId(
     accountId: string
   ): Promise<number> {
-    let nonce = await this.getNonceBySubstrateAccountId(accountId);
+    let nonceInstance = await this.getNonceBySubstrateAccountId(accountId);
 
-    if (nonce) return nonce.nonce;
+    if (nonceInstance) return nonceInstance.nonce;
 
-    nonce = new SignatureNonce();
-    nonce.nonce = 1;
-    nonce.substrateAccountId = accountId;
-    nonce.createdAt = new Date();
+    nonceInstance = new SignatureNonce();
+    nonceInstance.nonce = 1;
+    nonceInstance.substrateAccountId = accountId;
+    nonceInstance.createdAt = new Date();
 
-    await this.signatureNonceRepository.save(nonce);
+    await this.signatureNonceRepository.save(nonceInstance);
 
-    return nonce.nonce;
+    return nonceInstance.nonce;
   }
 
   async increaseNonceBySubstrateAccountId(accountId: string): Promise<number> {
@@ -47,9 +47,9 @@ export class SignatureNonceService {
 
   async isValidForSubstrateAccount(
     accountId: string,
-    nonce: number
+    clientNonce: number
   ): Promise<boolean> {
     const nonceInstance = await this.getNonceBySubstrateAccountId(accountId);
-    return !!(nonceInstance && nonce === nonceInstance.nonce);
+    return !!(nonceInstance && clientNonce === nonceInstance.nonce);
   }
 }

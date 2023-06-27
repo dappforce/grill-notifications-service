@@ -1,5 +1,4 @@
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
-
+import { ObjectType, Field } from '@nestjs/graphql';
 
 @ObjectType('AccountsLinkingMessageTemplateGql')
 export class AccountsLinkingMessageTemplateGqlType {

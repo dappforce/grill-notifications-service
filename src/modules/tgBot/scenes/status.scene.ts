@@ -1,33 +1,16 @@
-import {
-  Command,
-  Ctx,
-  Hears,
-  Scene,
-  SceneEnter,
-  SceneLeave,
-  Message,
-  On,
-  Action,
-  Sender
-} from 'nestjs-telegraf';
-import {
-  LINK_ACCOUNTS_SCENE_ID,
-  LINK_STATUS_SCENE_ID,
-  UNLINK_ACCOUNTS_SCENE_ID
-} from '../../../app.constants';
+import { Ctx, Scene, SceneEnter, Action, Sender } from 'nestjs-telegraf';
+import { LINK_STATUS_SCENE_ID } from '../../../app.constants';
 import { Context } from '../../../interfaces/context.interface';
 
 import { Markup } from 'telegraf';
 import { TgBotSceneHelpers } from './utils';
-import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
 import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 
 @Scene(LINK_STATUS_SCENE_ID)
 export class StatusScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
-    private telegramAccountsLinkService: TelegramAccountsLinkService,
-    private accountsLinkService: AccountsLinkService
+    private telegramAccountsLinkService: TelegramAccountsLinkService
   ) {}
 
   @SceneEnter()

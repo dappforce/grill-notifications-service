@@ -1,21 +1,15 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
-import {
-  AccountsLink,
-  NotificationServiceName
-} from '../typeorm/accountsLink.entity';
+import { AccountsLink } from '../typeorm/accountsLink.entity';
 import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
   SignedMessageWithDetails,
   signedMessage,
   SignedMessageAction
-} from '../dto/substreateTgAccountsLinkingMsg.dto';
+} from '../dto/substrateTgAccountsLinkingMsg.dto';
 import { sortObj } from 'jsonabc';
-import { AccountsLinkingMessageTemplateGqlType } from '../graphql/accountsLinkingMessageTemplate.gql.type';
 import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
-import { ProcessLinkingIdInputTelegramDto } from '../dto/processLinkingIdInput.telegram.dto';
-import { LinkedTgAccountsToSubstrateAccountResponseType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
 import { TelegramAccountsLinkService } from './telegram.accountsLink.service';
 import { SignatureNonceService } from '../../signatureNonce/services/signatureNonce.service';
 

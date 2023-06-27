@@ -1,8 +1,10 @@
-import { Global, Module, Provider } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Global, Module } from '@nestjs/common';
 import { transformAndValidateSync } from 'class-transformer-validator';
 import { IsNotEmpty } from 'class-validator';
 import * as dotenv from 'dotenv';
+import { CommonUtils } from './common/utils/common.util';
+import { TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT } from './app.constants';
+import { newLogger, Levels } from '@subsocial/utils';
 
 dotenv.config({ path: `${__dirname}/../.env.local` });
 
@@ -28,30 +30,33 @@ export class xSocialConfig {
   @IsNotEmpty()
   readonly TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: string;
 
+  readonly LOGGER_LEVEL: string;
+
   public API_NO_ADMIN_PROTECTION_STR: string;
 
   public API_NO_ADMIN_PROTECTION = false;
 
-  public TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS = 10;
+  public TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS =
+    TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT;
 }
 
 @Global()
 @Module({
   providers: [
+    CommonUtils,
     {
       provide: xSocialConfig,
-      useFactory: () => {
+      inject: [CommonUtils],
+      useFactory: (commonUtils: CommonUtils) => {
         const env = transformAndValidateSync(xSocialConfig, process.env);
-        const telegramTemporaryLinkingIdExpirationTimeMinsStr = Number.parseInt(
-          env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR || '10'
-        );
+        newLogger.setDefaultLevel((env.LOGGER_LEVEL as Levels) || 'INFO');
         env.API_NO_ADMIN_PROTECTION =
           env.API_NO_ADMIN_PROTECTION_STR === 'true' || false;
-        env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS = !Number.isNaN(
-          telegramTemporaryLinkingIdExpirationTimeMinsStr
-        )
-          ? telegramTemporaryLinkingIdExpirationTimeMinsStr
-          : 10;
+        env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS =
+          commonUtils.parseToNumberOrDefault(
+            env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR,
+            TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT
+          );
         return env;
       }
     }

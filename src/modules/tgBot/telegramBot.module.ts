@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { NotificationsChannel } from './controller/notificationsChannel.update';
 import { EnvModule } from '../../config';
 import { AccountsLinkModule } from '../accountsLink/accountsLink.module';
@@ -16,11 +16,6 @@ import { UnlinkAccountsScene } from './scenes/unlinkAccounts.scene';
     StatusScene,
     TgBotSceneHelpers
   ],
-  imports: [
-    // forwardRef(() => ModeratorModule),
-    AccountsLinkModule,
-    NotificationSettingsModule,
-    EnvModule
-  ]
+  imports: [AccountsLinkModule, NotificationSettingsModule, EnvModule]
 })
 export class TelegramBotModule {}

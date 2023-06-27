@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { SubsocialApi } from '@subsocial/api';
-import BigNumber from 'bignumber.js';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex, u8aToHex } from '@polkadot/util';

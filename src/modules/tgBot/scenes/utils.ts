@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
 import { NotificationSettingsService } from '../../notificationSettings/services/notificationSettings.service';
-import { Context } from '../../../interfaces/context.interface';
-import { TgBotErrorReasons } from '../dto/tgBotErrorReasons.dto';
 
 @Injectable()
 export class TgBotSceneHelpers {

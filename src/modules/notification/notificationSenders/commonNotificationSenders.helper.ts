@@ -1,19 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectBot } from 'nestjs-telegraf';
-import { GrillNotificationsBotName } from '../../../app.constants';
-import { Markup, Telegraf } from 'telegraf';
+import { GRILL_NOTIFICATIONS_BOT_NAME } from '../../../app.constants';
+import { Telegraf } from 'telegraf';
 import { TelegrafContext } from '../../../interfaces/context.interface';
 import { NotificationEventDataForSubstrateAccountDto } from '../dto/notificationEventTriggerData.dto';
-import { AccountNotificationData } from '../dto/types';
-import { EventName } from '../../dataProviders/dto/squid/squidEvents.dto';
 import { CommonUtils } from '../../../common/utils/common.util';
-import { InlineKeyboardMarkup } from 'typegram';
 import { xSocialConfig } from '../../../config';
 
 @Injectable()
 export class CommonNotificationSendersHelper {
   constructor(
-    @InjectBot(GrillNotificationsBotName)
+    @InjectBot(GRILL_NOTIFICATIONS_BOT_NAME)
     private bot: Telegraf<TelegrafContext>,
     private commonUtils: CommonUtils,
     private readonly xSocialConfig: xSocialConfig
@@ -36,6 +33,16 @@ export class CommonNotificationSendersHelper {
         return `https://moonbeam.moonscan.io/tx/${txHash}`;
       default:
         return null;
+    }
+  }
+
+  createPostUrlFromNotificationTriggerData(
+    triggerData: NotificationEventDataForSubstrateAccountDto
+  ): string | undefined {
+    try {
+      return `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`;
+    } catch (e) {
+      return undefined;
     }
   }
 }

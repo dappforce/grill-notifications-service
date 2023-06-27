@@ -14,9 +14,3 @@ export class NotificationEventDataForSubstrateAccountDto {
   account?: SquidSubstrateAccount;
   extension?: SquidContentExtension;
 }
-
-// export class NotificationEventByTgAccountDataDto {
-//   @IsNotEmpty()
-//   eventName: string;
-//   tgAccountId?: number;
-// }

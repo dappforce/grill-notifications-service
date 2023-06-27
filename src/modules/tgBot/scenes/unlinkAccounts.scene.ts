@@ -1,12 +1,8 @@
 import {
-  Command,
   Ctx,
-  Hears,
   Scene,
   SceneEnter,
   SceneLeave,
-  Message,
-  On,
   Action,
   Sender
 } from 'nestjs-telegraf';
@@ -16,7 +12,6 @@ import { Context } from '../../../interfaces/context.interface';
 import { Markup } from 'telegraf';
 import { TgBotSceneHelpers } from './utils';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
-import { xSocialConfig } from '../../../config';
 import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 
 @Scene(UNLINK_ACCOUNTS_SCENE_ID)
@@ -24,8 +19,7 @@ export class UnlinkAccountsScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
     private accountsLinkService: AccountsLinkService,
-    private telegramAccountsLinkService: TelegramAccountsLinkService,
-    private readonly xSocialConfig: xSocialConfig
+    private telegramAccountsLinkService: TelegramAccountsLinkService
   ) {}
 
   @SceneEnter()
@@ -58,21 +52,14 @@ export class UnlinkAccountsScene {
       processingMessage.message_id;
 
     const unlinkResult =
-      await this.telegramAccountsLinkService.unlinkTelegramAccountBySubstrateAccountWithAddress(
-        {
-          substrateAccount: substrateAddressForUnlinking,
-          telegramAccountId: userId.toString()
-        }
-      );
+      await this.telegramAccountsLinkService.unlinkTelegramAccountWithAddress({
+        substrateAccount: substrateAddressForUnlinking,
+        telegramAccountId: userId.toString()
+      });
 
-    if (!unlinkResult.success) {
-      await ctx.reply(`⚠️ ${unlinkResult.message}`);
-      ctx.session.__scenes.state['unlinkError'] = true;
-    } else {
-      ctx.session.__scenes.state['unlinkedSubstrateAccount'] =
-        substrateAddressForUnlinking;
-      ctx.session.__scenes.state['unlinkError'] = false;
-    }
+    ctx.session.__scenes.state['unlinkResult'] = unlinkResult;
+    ctx.session.__scenes.state['unlinkedSubstrateAccount'] =
+      substrateAddressForUnlinking;
 
     await ctx.deleteMessage(processingMessage.message_id);
     delete ctx.session.__scenes.state['processingMessageId'];
@@ -96,21 +83,24 @@ export class UnlinkAccountsScene {
 
   @SceneLeave()
   async onSceneLeave(@Ctx() ctx: Context): Promise<void> {
-    if (
-      ctx.session.__scenes.state['throwCancel'] ||
-      ctx.session.__scenes.state['unlinkError']
-    )
-      return;
+    if (ctx.session.__scenes.state['throwCancel']) return;
     if (ctx.session.__scenes.state['processingMessageId']) {
       await ctx.deleteMessage(
         ctx.session.__scenes.state['processingMessageId']
       );
       delete ctx.session.__scenes.state['processingMessageId'];
     }
-    if (ctx.session.__scenes.state['unlinkedSubstrateAccount']) {
-      await ctx.reply(
-        `✅ Account ${ctx.session.__scenes.state['unlinkedSubstrateAccount']} unlinked successfully.`
-      );
+
+    if (ctx.session.__scenes.state['unlinkResult']) {
+      if (ctx.session.__scenes.state['unlinkResult'].success) {
+        await ctx.reply(
+          `✅ Account ${ctx.session.__scenes.state['unlinkedSubstrateAccount']} unlinked successfully.`
+        );
+      } else {
+        await ctx.reply(
+          `⚠️ ${ctx.session.__scenes.state['unlinkResult'].message}.`
+        );
+      }
     } else {
       await ctx.reply(`✅Accounts unlinked successfully.`);
     }
