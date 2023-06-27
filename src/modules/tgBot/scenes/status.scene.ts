@@ -41,7 +41,7 @@ export class StatusScene {
 
     if (linksPersonal.length === 0 && linksFollowing.length === 0) {
       await ctx.reply(
-        `You don't have linked Grill accounts with this Telegram account.`
+        `You don't have any linked Grill accounts with this Telegram account.`
       );
     } else {
       let messageText = '';
@@ -49,7 +49,7 @@ export class StatusScene {
         messageText += `🙋‍ Your own connected Grill account:\n   🔹 ${linksPersonal[0].substrateAccountId}\n\n`;
 
       if (linksFollowing.length > 0)
-        messageText += `👀 Your subscribed Grill accounts:${linksFollowing.map(
+        messageText += `👀 Your following Grill accounts:${linksFollowing.map(
           (link) => `\n   🔹 ${link.substrateAccountId}`
         )}`;
       await ctx.reply(messageText.replace(/\,/g, ''));

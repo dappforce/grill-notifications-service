@@ -145,11 +145,18 @@ export class AccountsLinkService {
       }
     });
 
+    if (existingEntity && existingEntity.active) {
+      return {
+        existing: true,
+        entity: existingEntity
+      };
+    }
+
     if (existingEntity) {
       existingEntity.active = active;
       await this.accountsLinkRepository.save(existingEntity);
       return {
-        existing: true,
+        existing: false,
         entity: existingEntity
       };
       console.log('Accounts are already linked');

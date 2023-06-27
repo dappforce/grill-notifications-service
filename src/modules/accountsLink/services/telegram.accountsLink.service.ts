@@ -2,9 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { sortObj } from 'jsonabc';
-import {
-  NotificationServiceName
-} from '../typeorm/accountsLink.entity';
+import { NotificationServiceName } from '../typeorm/accountsLink.entity';
 import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
   SignedMessageAction,
@@ -341,7 +339,7 @@ export class TelegramAccountsLinkService {
         existing: true,
         entity: ownFollowingLink,
         success: false,
-        message: `You already have an active connection to your own account ${linkingIdOrAddress}. Please disconnect this address in Grill.chat and subscribe to it in the Telegram bot using the command "/link ${linkingIdOrAddress}"`
+        message: `Your accounts are already linked.`
       };
 
     const accountsLinkResult = await this.accountsLinkService.ensureAccountLink(
@@ -360,7 +358,7 @@ export class TelegramAccountsLinkService {
       ...accountsLinkResult,
       success: !accountsLinkResult.existing,
       message: accountsLinkResult.existing
-        ? `You already have an active subscription for address ${linkingIdOrAddress}`
+        ? `You are already following ${linkingIdOrAddress}`
         : undefined
     };
   }
@@ -450,8 +448,8 @@ export class TelegramAccountsLinkService {
       return {
         success: false,
         message: !following
-          ? `Account ${substrateAccount} doesn't have active connected Telegram accounts.`
-          : `You are not subscribed to this address - ${substrateAccount}`
+          ? `Account ${substrateAccount} is not connected to a Telegram account.`
+          : `You are not subscribed to ${substrateAccount}`
       };
 
     for (const link of activeLinks) {

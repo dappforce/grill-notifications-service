@@ -60,7 +60,7 @@ export class TelegramNotificationSendersHelper {
             ? this.getKeyboardWithRedirectInlineButton([
                 { text: 'Check donation 👉', url: checkUrl },
                 ...(txExplorerUrl
-                  ? [{ text: 'Explore tx 🧾', url: txExplorerUrl }]
+                  ? [{ text: 'Transaction info 🧾', url: txExplorerUrl }]
                   : [])
               ])
             : undefined
