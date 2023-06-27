@@ -1,14 +1,17 @@
 import { Entity, PrimaryColumn, Column, ObjectIdColumn } from 'typeorm';
 
+export enum NotificationServiceName {
+  telegram = 'telegram',
+  discord = 'discord',
+  email = 'email'
+}
+
 @Entity()
 export class AccountsLink {
   @ObjectIdColumn()
   _id: string;
 
   @PrimaryColumn()
-  tgAccountId: number;
-
-  @Column()
   substrateAccountId: string;
 
   @Column()
@@ -16,4 +19,17 @@ export class AccountsLink {
 
   @Column(() => Date)
   createdAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: NotificationServiceName,
+    default: NotificationServiceName.telegram
+  })
+  notificationServiceName: NotificationServiceName;
+
+  @Column()
+  notificationServiceAccountId: string;
+
+  @Column()
+  following: boolean;
 }

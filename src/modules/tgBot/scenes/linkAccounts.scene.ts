@@ -1,12 +1,8 @@
 import {
-  Command,
   Ctx,
-  Hears,
   Scene,
   SceneEnter,
   SceneLeave,
-  Message,
-  On,
   Action,
   Sender
 } from 'nestjs-telegraf';
@@ -16,12 +12,16 @@ import { Context } from '../../../interfaces/context.interface';
 import { Markup } from 'telegraf';
 import { TgBotSceneHelpers } from './utils';
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
+import { xSocialConfig } from '../../../config';
+import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 
 @Scene(LINK_ACCOUNTS_SCENE_ID)
 export class LinkAccountsScene {
   constructor(
     private tgBotSceneHelpers: TgBotSceneHelpers,
-    private accountsLinkService: AccountsLinkService
+    private accountsLinkService: AccountsLinkService,
+    private telegramAccountsLinkService: TelegramAccountsLinkService,
+    private readonly xSocialConfig: xSocialConfig
   ) {}
 
   @SceneEnter()
@@ -30,16 +30,14 @@ export class LinkAccountsScene {
     @Sender('first_name') firstName: string,
     @Sender('last_name') lastName: string,
     @Sender('username') userName: string,
+    @Sender('phone_number') phoneNumber: string,
     @Sender('id') userId: number
   ): Promise<string> {
-    let substrateAccountId = null;
     let processingMessage = null;
-    substrateAccountId = ctx.state.command.args[0];
+    const linkingTmpIdOrAddress = ctx.state.command.args[0];
 
-    if (!substrateAccountId) {
-      await ctx.reply(
-        '⚠️ The account ID has not been provided along with the command.'
-      );
+    if (!linkingTmpIdOrAddress) {
+      ctx.session.__scenes.state['throwCancel'] = true;
       await ctx.scene.leave();
       return;
     }
@@ -50,14 +48,27 @@ export class LinkAccountsScene {
         Markup.button.callback('❎ Cancel', 'cancel_processing')
       ])
     );
+    ctx.session.__scenes.state['processingMessageId'] =
+      processingMessage.message_id;
 
-    await this.accountsLinkService.ensureAccountLink({
-      tgAccountId: userId,
-      substrateAccountId: substrateAccountId,
-      active: true
-    });
+    const accountsLinkingResult =
+      await this.telegramAccountsLinkService.processTemporaryLinkingIdOrAddress(
+        {
+          telegramAccountData: {
+            accountId: userId.toString(),
+            phoneNumber: phoneNumber,
+            userName: userName,
+            firstName: firstName,
+            lastName: lastName
+          },
+          linkingIdOrAddress: linkingTmpIdOrAddress
+        }
+      );
+
+    ctx.session.__scenes.state['accountsLinkingResult'] = accountsLinkingResult;
 
     await ctx.deleteMessage(processingMessage.message_id);
+    delete ctx.session.__scenes.state['processingMessageId'];
     await ctx.scene.leave();
     return;
   }
@@ -65,23 +76,38 @@ export class LinkAccountsScene {
   @Action('cancel_processing')
   async onStopCommand(@Ctx() ctx: Context): Promise<void> {
     await ctx.answerCbQuery();
+    delete ctx.session.__scenes.state['accountsLinkingResult'];
     if (ctx.session.__scenes.state['processingMessageId']) {
       await ctx.deleteMessage(
         ctx.session.__scenes.state['processingMessageId']
       );
       delete ctx.session.__scenes.state['processingMessageId'];
     }
-    if (ctx.session.__scenes.state['reasonSelectionMessage']) {
-      await ctx.deleteMessage(
-        ctx.session.__scenes.state['reasonSelectionMessage']
-      );
-      delete ctx.session.__scenes.state['reasonSelectionMessage'];
-    }
+    ctx.session.__scenes.state['throwCancel'] = true;
     await ctx.scene.leave();
   }
 
   @SceneLeave()
   async onSceneLeave(@Ctx() ctx: Context): Promise<void> {
-    await ctx.reply('Accounts linked');
+    if (ctx.session.__scenes.state['throwCancel']) return;
+    if (ctx.session.__scenes.state['processingMessageId']) {
+      await ctx.deleteMessage(
+        ctx.session.__scenes.state['processingMessageId']
+      );
+      delete ctx.session.__scenes.state['processingMessageId'];
+    }
+    if (ctx.session.__scenes.state['accountsLinkingResult']) {
+      if (ctx.session.__scenes.state['accountsLinkingResult'].success) {
+        await ctx.reply(
+          `✅ Account linked successfully with Grill account ${ctx.session.__scenes.state['accountsLinkingResult'].entity.substrateAccountId}.`
+        );
+      } else {
+        await ctx.reply(
+          `⚠️ ${ctx.session.__scenes.state['accountsLinkingResult'].message}.`
+        );
+      }
+    } else {
+      await ctx.reply(`✅Accounts linked successfully.`);
+    }
   }
 }

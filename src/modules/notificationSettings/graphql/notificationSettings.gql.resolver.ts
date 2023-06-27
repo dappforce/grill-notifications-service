@@ -1,32 +1,24 @@
-import {
-  Args,
-  Field,
-  ID,
-  Query,
-  Resolver,
-  ResolveField,
-  Parent,
-  Mutation
-} from '@nestjs/graphql';
-import { NotificationSettingsGqlType } from './notificationSettings.gql.type';
+import { Args, Query, Resolver, Mutation } from '@nestjs/graphql';
 import { NotificationSettingsService } from '../services/notificationSettings.service';
 import { NotificationSettingsGqlInput } from './notificationSettings.gql.input';
 import { UseGuards } from '@nestjs/common';
-import { AdminGqlGuard } from '../../../common/guards/admin.gql.guard';
+import { AuthGqlGuard } from '../../../common/guards/admin.gql.guard';
+import { NotificationSettings } from '../typeorm/notificationSettings.entity';
 
-@Resolver((of) => NotificationSettingsGqlType)
+@Resolver((of) => NotificationSettings)
 export class NotificationSettingsGqlResolver {
   constructor(
     private notificationSettingsService: NotificationSettingsService
   ) {}
 
-  @Query(() => NotificationSettingsGqlType)
-  notificationSettingsByAccountId(@Args('id') id: string) {
+  @Query(() => NotificationSettings)
+  @UseGuards(AuthGqlGuard)
+  async notificationSettingsByAccountId(@Args('id') id: string) {
     return this.notificationSettingsService.findByAccountId(id);
   }
 
-  @Mutation((returns) => NotificationSettingsGqlType)
-  @UseGuards(AdminGqlGuard)
+  @Mutation((returns) => NotificationSettings)
+  @UseGuards(AuthGqlGuard)
   createNotificationSettingsToAccount(
     @Args('createNotificationSettingsInput')
     createNotificationSettingsInput: NotificationSettingsGqlInput
@@ -36,8 +28,8 @@ export class NotificationSettingsGqlResolver {
     );
   }
 
-  @Mutation((returns) => NotificationSettingsGqlType)
-  @UseGuards(AdminGqlGuard)
+  @Mutation((returns) => NotificationSettings)
+  @UseGuards(AuthGqlGuard)
   updateNotificationSettingsToAccount(
     @Args('updateNotificationSettingsInput')
     updateNotificationSettingsInput: NotificationSettingsGqlInput

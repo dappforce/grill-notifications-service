@@ -3,7 +3,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { sessionMiddleware } from './middleware/session.middleware';
 import { commandWithArgsMiddleware } from './middleware/commandWithArgs.middleware';
-import { GrillNotificationsBotName } from './app.constants';
+import { GRILL_NOTIFICATIONS_BOT_NAME } from './app.constants';
 import { TelegramBotModule } from './modules/tgBot/telegramBot.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -16,13 +16,17 @@ import { NotificationSettings } from './modules/notificationSettings/typeorm/not
 import { AccountsLink } from './modules/accountsLink/typeorm/accountsLink.entity';
 import { DataProvidersModule } from './modules/dataProviders/dataProviders.module';
 import { SquidDataSubscriptionStatus } from './modules/dataProviders/typeorm/squidDataSubscriptionStatus';
+import { TelegramAccount } from './modules/accountsLink/typeorm/telegramAccount.entity';
+import { TelegramTemporaryLinkingId } from './modules/accountsLink/typeorm/telegramTemporaryLinkingId.entity';
+import { SignatureNonceModule } from './modules/signatureNonce/signatureNonce.module';
+import { SignatureNonce } from './modules/signatureNonce/typeorm/signatureNonce.entity';
 
 @Module({
   imports: [
     EnvModule,
     TelegrafModule.forRootAsync({
       inject: [xSocialConfig],
-      botName: GrillNotificationsBotName,
+      botName: GRILL_NOTIFICATIONS_BOT_NAME,
       useFactory: (env: xSocialConfig) => {
         return {
           token: env.NOTIFICATIONS_BOT_TOKEN,
@@ -45,12 +49,16 @@ import { SquidDataSubscriptionStatus } from './modules/dataProviders/typeorm/squ
         synchronize: false,
         useUnifiedTopology: true,
         entities: [
+          TelegramTemporaryLinkingId,
+          SquidDataSubscriptionStatus,
           NotificationSettings,
-          AccountsLink,
-          SquidDataSubscriptionStatus
+          TelegramAccount,
+          SignatureNonce,
+          AccountsLink
         ]
       })
     }),
+    SignatureNonceModule,
     NotificationSettingsModule,
     AccountsLinkModule,
     NotificationModule,

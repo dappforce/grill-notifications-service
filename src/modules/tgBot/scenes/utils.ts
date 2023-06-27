@@ -1,17 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
-import { NotificationSettingsService } from '../../notificationSettings/services/notificationSettings.service';
-import { Context } from '../../../interfaces/context.interface';
-import { TgBotErrorReasons } from '../dto/tgBotErrorReasons.dto';
+import { CryptoUtils } from '../../../common/utils/crypto.util';
 
 @Injectable()
 export class TgBotSceneHelpers {
-  constructor(
-    private blockedResourceService: AccountsLinkService,
-    private blockReasonService: NotificationSettingsService
-  ) {}
+  constructor(private cryptoUtils: CryptoUtils) {}
 
-  getHubsListLabel(hubs: string[]): string {
-    return `hub${hubs.length > 1 ? 's' : ''}`;
+  getNameWithAddressOrAddress(address: string): string {
+    const name = this.cryptoUtils.generateRandomName(address);
+    return name ? `${name} (${address})` : `${address}`;
   }
 }

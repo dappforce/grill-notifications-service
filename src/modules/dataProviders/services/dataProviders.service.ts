@@ -1,9 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository, Repository } from 'typeorm';
-import { xSocialConfig } from '../../../config';
 import {
-  SquidApiSubscriptionQueryName,
+  SquidApiQueryName,
   SquidDataSubscriptionStatus
 } from '../typeorm/squidDataSubscriptionStatus';
 import { SubsocialApi } from '@subsocial/api';
@@ -13,14 +12,14 @@ export class DataProvidersService {
   constructor(
     @InjectRepository(SquidDataSubscriptionStatus)
     public squidDataSubscriptionStatusRepository: MongoRepository<SquidDataSubscriptionStatus>,
-    public subsocialApiProvider: SubsocialApi,
+    public subsocialApiProvider: SubsocialApi
   ) {}
 
   async getOrCreateStatusByQueryName({
     name,
     lastProcessedBlockNumber
   }: {
-    name: SquidApiSubscriptionQueryName;
+    name: SquidApiQueryName;
     lastProcessedBlockNumber?: number;
   }) {
     let entity = await this.squidDataSubscriptionStatusRepository.findOne({
@@ -59,7 +58,7 @@ export class DataProvidersService {
     name,
     lastProcessedBlockNumber
   }: {
-    name: SquidApiSubscriptionQueryName;
+    name: SquidApiQueryName;
     lastProcessedBlockNumber: number;
   }) {
     let statusEntity = await this.squidDataSubscriptionStatusRepository.findOne(

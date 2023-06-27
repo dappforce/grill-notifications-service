@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationSettingsGqlResolver } from './graphql/notificationSettings.gql.resolver';
 import { NotificationSettingsService } from './services/notificationSettings.service';

@@ -10,7 +10,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
-export class AdminGqlGuard implements CanActivate {
+export class AuthGqlGuard implements CanActivate {
   constructor(private readonly xSocialConfig: xSocialConfig) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

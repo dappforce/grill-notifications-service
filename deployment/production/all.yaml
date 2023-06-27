@@ -25,7 +25,6 @@ spec:
       ingress.kubernetes.io/from-to-www-redirect: "true"
       nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
       nginx.org/client-max-body-size: "10m"
-      nginx.org/client-max-body-size: "10m"
       nginx.ingress.kubernetes.io/proxy-body-size: "10m"
       nginx.ingress.kubernetes.io/client-max-body-size: "10m"
 
@@ -59,5 +58,9 @@ data:
   IPFS_NODE_URL: "https://ipfs.subsocial.network/"
   IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"
   BOT_PORT: "3000"
-  TG_NO_ADMIN_PROTECTION_STR: "false"
   API_NO_ADMIN_PROTECTION_STR: "false"
+  DATA_PROVIDER_SQUID_WS_URL: "wss://squid.subsquid.io/xsocial-wss/graphql"
+  DATA_PROVIDER_SQUID_HTTPS_URL: "https://squid.subsquid.io/xsocial/graphql"
+  TELEGRAM_BOT_GRILL_REDIRECTION_HREF: "https://grill.chat"
+  TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: "10"
+

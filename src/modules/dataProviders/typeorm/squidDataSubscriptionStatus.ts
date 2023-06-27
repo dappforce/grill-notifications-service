@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, ObjectIdColumn } from 'typeorm';
 
-export enum SquidApiSubscriptionQueryName {
+export enum SquidApiQueryName {
   activities = 'activities',
   notifications = 'notifications'
 }
@@ -12,10 +12,10 @@ export class SquidDataSubscriptionStatus {
 
   @PrimaryColumn({
     type: 'enum',
-    enum: SquidApiSubscriptionQueryName,
+    enum: SquidApiQueryName,
     nullable: false
   })
-  subscriptionQueryName: SquidApiSubscriptionQueryName;
+  subscriptionQueryName: SquidApiQueryName;
 
   @Column()
   lastProcessedBlockNumber: number;

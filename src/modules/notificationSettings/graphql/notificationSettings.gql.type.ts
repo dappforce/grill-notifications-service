@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { ObjectType, Field } from '@nestjs/graphql';
 
 @ObjectType()
 export class NotificationSubscription {
@@ -12,7 +12,7 @@ export class NotificationSubscription {
 @ObjectType('NotificationSettingsGql')
 export class NotificationSettingsGqlType {
   @Field({ nullable: false })
-  accountId: string;
+  substrateAccountId: string;
 
   @Field(() => NotificationSubscription)
   subscriptions: NotificationSubscription[];

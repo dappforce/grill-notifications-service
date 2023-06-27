@@ -1,8 +1,10 @@
-import { Global, Module, Provider } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Global, Module } from '@nestjs/common';
 import { transformAndValidateSync } from 'class-transformer-validator';
 import { IsNotEmpty } from 'class-validator';
 import * as dotenv from 'dotenv';
+import { CommonUtils } from './common/utils/common.util';
+import { TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT } from './app.constants';
+import { newLogger, Levels } from '@subsocial/utils';
 
 dotenv.config({ path: `${__dirname}/../.env.local` });
 
@@ -18,37 +20,43 @@ export class xSocialConfig {
   @IsNotEmpty()
   readonly MONGODB_URL: string;
   @IsNotEmpty()
-  readonly ADMIN_IDS: string;
-  @IsNotEmpty()
   readonly GQL_API_AUTH_SECRET: string;
   @IsNotEmpty()
   readonly DATA_PROVIDER_SQUID_WS_URL: string;
+  @IsNotEmpty()
+  readonly DATA_PROVIDER_SQUID_HTTPS_URL: string;
+  @IsNotEmpty()
+  readonly TELEGRAM_BOT_GRILL_REDIRECTION_HREF: string;
+  @IsNotEmpty()
+  readonly TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: string;
 
-  public ADMIN_IDS_LIST: number[];
+  readonly LOGGER_LEVEL: string;
 
-  public TG_NO_ADMIN_PROTECTION_STR: string;
   public API_NO_ADMIN_PROTECTION_STR: string;
 
-  public TG_NO_ADMIN_PROTECTION = false;
   public API_NO_ADMIN_PROTECTION = false;
+
+  public TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS =
+    TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT;
 }
 
 @Global()
 @Module({
   providers: [
+    CommonUtils,
     {
       provide: xSocialConfig,
-      useFactory: () => {
+      inject: [CommonUtils],
+      useFactory: (commonUtils: CommonUtils) => {
         const env = transformAndValidateSync(xSocialConfig, process.env);
-        env.ADMIN_IDS_LIST = env.ADMIN_IDS.split(';;')
-          .map((id) =>
-            !Number.isNaN(Number.parseInt(id)) ? Number.parseInt(id) : null
-          )
-          .filter((maybeId) => !!maybeId);
-        env.TG_NO_ADMIN_PROTECTION =
-          env.TG_NO_ADMIN_PROTECTION_STR === 'true' || false;
+        newLogger.setDefaultLevel((env.LOGGER_LEVEL as Levels) || 'INFO');
         env.API_NO_ADMIN_PROTECTION =
           env.API_NO_ADMIN_PROTECTION_STR === 'true' || false;
+        env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS =
+          commonUtils.parseToNumberOrDefault(
+            env.TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR,
+            TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_DEFAULT
+          );
         return env;
       }
     }
