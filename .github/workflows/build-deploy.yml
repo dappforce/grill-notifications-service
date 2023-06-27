@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - staging
+      - main
 
 jobs:
   docker_build:
@@ -90,6 +91,41 @@ jobs:
 
       - name: Deploy to DigitalOcean Kubernetes
         run: kubectl apply -f $GITHUB_WORKSPACE/deployment/staging/deploy.yaml
+
+      - name: Verify deployment
+        run: kubectl -n sub-back rollout status deployment/grill-notifications
+
+  production_deploy:
+    name: Deploy to prodution infra
+    needs: docker_build
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        id: extract_branch
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN_PROD }}
+
+      - name: Update deployment file
+        run: TAG=${{ env.name }}-$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|dappforce/subsocial-grill-notifications:'${TAG}'|' $GITHUB_WORKSPACE/deployment/staging/deploy.yaml
+
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.K8S_PROD }}
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: kubectl apply -f $GITHUB_WORKSPACE/deployment/production/all.yaml
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: kubectl apply -f $GITHUB_WORKSPACE/deployment/production/deploy.yaml
 
       - name: Verify deployment
         run: kubectl -n sub-back rollout status deployment/grill-notifications
