@@ -5,9 +5,15 @@ import { NotificationSettingsModule } from '../notificationSettings/notification
 import { TelegramNotificationSendersHelper } from './notificationSenders/telegramNotificationSenders.helper';
 import { CommonUtils } from '../../common/utils/common.util';
 import { EnvModule } from '../../config';
+import { CommonNotificationSendersHelper } from './notificationSenders/commonNotificationSenders.helper';
 
 @Module({
-  providers: [NotificationService, TelegramNotificationSendersHelper, CommonUtils],
+  providers: [
+    NotificationService,
+    TelegramNotificationSendersHelper,
+    CommonNotificationSendersHelper,
+    CommonUtils
+  ],
   imports: [AccountsLinkModule, NotificationSettingsModule, EnvModule],
   exports: [NotificationService]
 })
