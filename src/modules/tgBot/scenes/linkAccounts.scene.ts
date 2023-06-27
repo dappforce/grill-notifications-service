@@ -37,16 +37,7 @@ export class LinkAccountsScene {
     const linkingTmpIdOrAddress = ctx.state.command.args[0];
 
     if (!linkingTmpIdOrAddress) {
-      await ctx.reply(
-        `Let's rock! Go to your Profile settings in grill.chat application, find "Connect Telegram" button and copy 
-        Telegram bot linking message. Than give it to me and I'll link your Grill account with current Telegram account.`,
-        Markup.inlineKeyboard([
-          Markup.button.url(
-            'Go to Grill',
-            this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF
-          )
-        ])
-      );
+      ctx.session.__scenes.state['throwCancel'] = true;
       await ctx.scene.leave();
       return;
     }
