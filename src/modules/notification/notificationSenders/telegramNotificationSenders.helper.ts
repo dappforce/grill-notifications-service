@@ -29,7 +29,7 @@ export class TelegramNotificationSendersHelper {
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToCommentReplyCreated(triggerData),
           this.getKeyboardWithRedirectInlineButton(
-            'Check hear 👉',
+            'Check here 👉',
             `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`
           )
         );
@@ -40,7 +40,7 @@ export class TelegramNotificationSendersHelper {
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToExtensionDonationCreated(triggerData),
           this.getKeyboardWithRedirectInlineButton(
-            'Check hear 👉',
+            'Check here 👉',
             `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`
           )
         );
