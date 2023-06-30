@@ -116,7 +116,7 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN_PROD }}
 
       - name: Update deployment file
-        run: TAG=${{ env.name }}-$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|dappforce/subsocial-grill-notifications:'${TAG}'|' $GITHUB_WORKSPACE/deployment/staging/deploy.yaml
+        run: TAG=${{ env.name }}-$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|dappforce/subsocial-grill-notifications:'${TAG}'|' $GITHUB_WORKSPACE/deployment/production/deploy.yaml
 
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.K8S_PROD }}

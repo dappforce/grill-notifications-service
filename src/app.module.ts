@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod
+} from '@nestjs/common';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { sessionMiddleware } from './middleware/session.middleware';
@@ -20,6 +25,7 @@ import { TelegramAccount } from './modules/accountsLink/typeorm/telegramAccount.
 import { TelegramTemporaryLinkingId } from './modules/accountsLink/typeorm/telegramTemporaryLinkingId.entity';
 import { SignatureNonceModule } from './modules/signatureNonce/signatureNonce.module';
 import { SignatureNonce } from './modules/signatureNonce/typeorm/signatureNonce.entity';
+import { RobotTxtMiddleware } from './middleware/robotTxt.middleware';
 
 @Module({
   imports: [
@@ -66,4 +72,10 @@ import { SignatureNonce } from './modules/signatureNonce/typeorm/signatureNonce.
     DataProvidersModule
   ]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RobotTxtMiddleware)
+      .forRoutes({ path: 'robot.txt', method: RequestMethod.GET });
+  }
+}
