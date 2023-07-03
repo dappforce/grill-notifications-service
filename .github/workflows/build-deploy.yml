@@ -51,6 +51,8 @@ jobs:
           push: true
           tags: |
             ${{ env.image }}
+            if: ${{ github.ref == 'refs/heads/main' }}
+            docker.io/dappforce/subsocial-grill-notifications:main-latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
