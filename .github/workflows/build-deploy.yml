@@ -43,6 +43,7 @@ jobs:
             ${{ runner.os }}-single-buildx
 
       - name: Build image
+        if: ${{ github.ref == 'refs/heads/staging' }}
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -54,6 +55,20 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+      - name: Build image
+        if: ${{ github.ref == 'refs/heads/main' }}    
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.image }}
+            docker.io/dappforce/subsocial-grill-notifications:main-latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
