@@ -9,9 +9,9 @@ import {
   SignedMessageAction
 } from '../dto/substrateTgAccountsLinkingMsg.dto';
 import { sortObj } from 'jsonabc';
-import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
+import { EnsureAccountLinkInputDto } from '../dto/input/ensureAccountLinkInput.dto';
 import { TelegramAccountsLinkService } from './telegram.accountsLink.service';
-import { SignatureNonceService } from '../../signatureNonce/services/signatureNonce.service';
+import {SignatureNonceService} from "../../signedMessage/services/signatureNonce.service";
 
 @Injectable()
 export class AccountsLinkService {
@@ -35,29 +35,19 @@ export class AccountsLinkService {
   }
 
   async createTemporaryLinkingId(
-    signedMsgWithDetails: string,
+    signedMsgParsed: SignedMessageWithDetails,
     action: SignedMessageAction
   ) {
-    const parsedMessageWithDetails =
-      await this.parseAndVerifySignedMessageWithDetails(
-        decodeURIComponent(signedMsgWithDetails)
-      );
     switch (action) {
       case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
-        if (
-          parsedMessageWithDetails.payload.action !==
-          SignedMessageAction.LINK_TELEGRAM_ACCOUNT
-        )
-          throw new Error(`Invalid action.`);
-
         const linkingId =
           await this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
-            parsedMessageWithDetails
+              signedMsgParsed
           );
         await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-          parsedMessageWithDetails.address
+            signedMsgParsed.address
         );
-        return linkingId;
+        return linkingId.id;
       default:
         throw new Error('Invalid action value.');
     }
@@ -174,42 +164,42 @@ export class AccountsLinkService {
     }
   }
 
-  async parseAndVerifySignedMessageWithDetails(
-    signedMessageWithDetails: string
-  ): Promise<SignedMessageWithDetails> {
-    let parsedMessage = null;
-    try {
-      parsedMessage = JSON.parse(signedMessageWithDetails);
-    } catch (e) {
-      throw new Error('Provided invalid message. Json parse'); // TODO add error handler
-    }
-    if (!signedMessageWithDetails) throw new Error(); // TODO add error handler
-
-    const messageValidation = signedMessage.safeParse(parsedMessage);
-
-    if (!messageValidation.success) {
-      throw new Error('Provided invalid message.'); // TODO add error handler
-    }
-
-    const { data } = messageValidation;
-
-    if (
-      !(await this.signatureNonceService.isValidForSubstrateAccount(
-        data.address,
-        data.payload.nonce
-      ))
-    )
-      throw new Error('Provided invalid message. Nonce is invalid.');
-
-    if (
-      !this.cryptoUtils.isValidSignature({
-        address: data.address,
-        signature: data.signature,
-        message: JSON.stringify(sortObj(data.payload))
-      })
-    )
-      throw new Error('Signature is invalid.'); // TODO add error handler
-
-    return data;
-  }
+  // async parseAndVerifySignedMessageWithDetails(
+  //   signedMessageWithDetails: string
+  // ): Promise<SignedMessageWithDetails> {
+  //   let parsedMessage = null;
+  //   try {
+  //     parsedMessage = JSON.parse(signedMessageWithDetails);
+  //   } catch (e) {
+  //     throw new Error('Provided invalid message. Json parse'); // TODO add error handler
+  //   }
+  //   if (!signedMessageWithDetails) throw new Error(); // TODO add error handler
+  //
+  //   const messageValidation = signedMessage.safeParse(parsedMessage);
+  //
+  //   if (!messageValidation.success) {
+  //     throw new Error('Provided invalid message.'); // TODO add error handler
+  //   }
+  //
+  //   const { data } = messageValidation;
+  //
+  //   if (
+  //     !(await this.signatureNonceService.isValidForSubstrateAccount(
+  //       data.address,
+  //       data.payload.nonce
+  //     ))
+  //   )
+  //     throw new Error('Provided invalid message. Nonce is invalid.');
+  //
+  //   if (
+  //     !this.cryptoUtils.isValidSignature({
+  //       address: data.address,
+  //       signature: data.signature,
+  //       message: JSON.stringify(sortObj(data.payload))
+  //     })
+  //   )
+  //     throw new Error('Signature is invalid.'); // TODO add error handler
+  //
+  //   return data;
+  // }
 }

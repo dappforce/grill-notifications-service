@@ -1,4 +1,4 @@
-import { AccountsLink } from '../typeorm/accountsLink.entity';
+import { AccountsLink } from '../../typeorm/accountsLink.entity';
 
 export class ProcessLinkingIdOrAddressResponseTelegramDto {
   entity: Omit<AccountsLink, '_id'>;

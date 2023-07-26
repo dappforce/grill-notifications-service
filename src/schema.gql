@@ -39,18 +39,51 @@ type NotificationSettingsGql {
   _id: String!
 }
 
+type SignedMessageWithActionTemplateResponseDto {
+  messageTpl: String!
+}
+
+type CommitSignedMessageResponseData {
+  tmpLinkingIdForTelegram: String
+}
+
+type CommitSignedMessageResponse {
+  data: CommitSignedMessageResponseData
+  success: Boolean!
+  message: String
+}
+
 type Query {
-  notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
   linkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  linkAddressWithTelegramAccountMessage(input: LinkAddressWithTelegramAccountMessageInput!): SignedMessageWithActionTemplateResponseDto!
   unlinkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  unlinkAddressFromTelegramAccountMessage(input: UnlinkAddressWithTelegramAccountMessageInput!): SignedMessageWithActionTemplateResponseDto!
   telegramAccountsLinkedToSubstrateAccount(substrateAccount: String!): LinkedTgAccountsToSubstrateAccountResponseType!
+  notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
+}
+
+input LinkAddressWithTelegramAccountMessageInput {
+  substrateAddress: String!
+}
+
+input UnlinkAddressWithTelegramAccountMessageInput {
+  substrateAddress: String!
 }
 
 type Mutation {
+  commitSignedMessageWithAction(signedMessage: String!): CommitSignedMessageResponse
+
+  """
+  This mutation is deprecated and "commitSignedMessageWithAction" must be used instead.
+  """
+  createTemporaryLinkingIdForTelegram(signedMessageWithDetails: String!): CreateTemporaryLinkingIdForTelegramResponseDto!
+
+  """
+  This mutation is deprecated and "commitSignedMessageWithAction" must be used instead.
+  """
+  unlinkTelegramAccount(signedMessageWithDetails: String!): UnlinkTelegramAccountResponseDto!
   createNotificationSettingsToAccount(createNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
   updateNotificationSettingsToAccount(updateNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
-  createTemporaryLinkingIdForTelegram(signedMessageWithDetails: String!): CreateTemporaryLinkingIdForTelegramResponseDto!
-  unlinkTelegramAccount(signedMessageWithDetails: String!): UnlinkTelegramAccountResponseDto!
 }
 
 input NotificationSettingsGqlInput {
