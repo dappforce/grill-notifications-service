@@ -4,6 +4,7 @@ import { encodeAddress, Keyring } from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { stringToU8a, u8aToHex } from '@polkadot/util';
 import { sortObj } from 'jsonabc';
+import { SignedMessageAction } from '../src/modules/signedMessage/dto/signedMessage.dto';
 
 type TgAccountLinkingMessage = {
   payload: {
@@ -48,9 +49,14 @@ describe('Link unlink Accounts', () => {
   test('sign message by private key and verify signature', () => {
     if (!keyPair) return;
 
+    // const payloadLink = sortObj({
+    //   action: 'LINK_TELEGRAM_ACCOUNT',
+    //   nonce: 3
+    // });
     const payloadLink = sortObj({
-      action: 'LINK_TELEGRAM_ACCOUNT',
-      nonce: 3
+      action: SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS,
+      nonce: 6,
+      fcmToken: 'token'
     });
 
     const payloadUnlink = sortObj({
@@ -69,7 +75,8 @@ describe('Link unlink Accounts', () => {
     const signatureHexUnLink = u8aToHex(signedPayloadUnLink);
 
     const msgForUserLink = {
-      action: 'LINK_TELEGRAM_ACCOUNT',
+      // action: 'LINK_TELEGRAM_ACCOUNT',
+      action: SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS,
       address: encodeAddress(u8aToHex(keyPair.publicKey), 28),
       signature: signatureHexLink,
       payload: payloadLink

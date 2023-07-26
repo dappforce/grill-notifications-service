@@ -17,6 +17,8 @@ import { SignedMessageAction } from '../dto/signedMessage.dto';
 import { CommitSignedMessageResponse } from '../dto/response/commitSignedMessage.response';
 import { AccountsLinkingMessageTemplateGqlType } from '../dto/response/accountsLinkingMessageTemplate.gql.type';
 import { UnlinkAddressWithTelegramAccountMessageInput } from '../dto/input/unlinkAddressWithTelegramAccountMessage.input';
+import { AddFcmTokenToAddressMessageMessageInput } from '../dto/input/addFcmTokenToAddressMessage.input';
+import { DeleteFcmTokenFromAddressMessageInput } from '../dto/input/deleteFcmTokenFromAddressMessage.input';
 
 @Resolver()
 export class SignedMessageGqlResolver {
@@ -69,6 +71,28 @@ export class SignedMessageGqlResolver {
   ) {
     return this.signedMessageService.getMessageWithAction(
       SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT,
+      input
+    );
+  }
+
+  @Query(() => SignedMessageWithActionTemplateResponseDto)
+  // @UseGuards(AuthGqlGuard)
+  addFcmTokenToAddressMessage(
+    @Args('input') input: AddFcmTokenToAddressMessageMessageInput
+  ) {
+    return this.signedMessageService.getMessageWithAction(
+      SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS,
+      input
+    );
+  }
+
+  @Query(() => SignedMessageWithActionTemplateResponseDto)
+  // @UseGuards(AuthGqlGuard)
+  deleteFcmTokenFromAddressMessage(
+    @Args('input') input: DeleteFcmTokenFromAddressMessageInput
+  ) {
+    return this.signedMessageService.getMessageWithAction(
+      SignedMessageAction.DELETE_FCM_TOKEN_FROM_ADDRESS,
       input
     );
   }

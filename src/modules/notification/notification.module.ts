@@ -7,11 +7,13 @@ import { CommonUtils } from '../../common/utils/common.util';
 import { EnvModule } from '../../config';
 import { CommonNotificationSendersHelper } from './notificationSenders/commonNotificationSenders.helper';
 import { CryptoUtils } from '../../common/utils/crypto.util';
+import { FcmSendersHelper } from './notificationSenders/fcmSenders.helper';
 
 @Module({
   providers: [
     NotificationService,
     TelegramNotificationSendersHelper,
+    FcmSendersHelper,
     CommonNotificationSendersHelper,
     CommonUtils,
     CryptoUtils

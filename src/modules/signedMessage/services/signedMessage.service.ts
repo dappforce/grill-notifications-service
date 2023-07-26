@@ -16,6 +16,7 @@ import {
 import { AccountsLinkService } from '../../accountsLink/services/accountsLink.service';
 import { TelegramAccountsLinkService } from '../../accountsLink/services/telegram.accountsLink.service';
 import { CommitSignedMessageResponse } from '../dto/response/commitSignedMessage.response';
+import { FcmAccountsLinkService } from '../../accountsLink/services/fcm.accountsLink.service';
 
 @Injectable()
 export class SignedMessageService {
@@ -26,54 +27,10 @@ export class SignedMessageService {
     public accountsLinkService: AccountsLinkService,
     @Inject(forwardRef(() => TelegramAccountsLinkService))
     public telegramAccountsLinkService: TelegramAccountsLinkService,
+    @Inject(forwardRef(() => FcmAccountsLinkService))
+    public fcmAccountsLinkService: FcmAccountsLinkService,
     private cryptoUtils: CryptoUtils
   ) {}
-
-  async getMessageWithAction(
-    action: SignedMessageAction,
-    messagePayloadArgs: SignedMessagePayloadDto
-  ): Promise<SignedMessageWithActionTemplateResponseDto> {
-    const substrateAddressDecorated =
-      this.cryptoUtils.substrateAddressToSubsocialFormat(
-        messagePayloadArgs.substrateAddress
-      );
-    const nonce =
-      await this.signatureNonceService.getOrCreateNonceBySubstrateAccountId(
-        substrateAddressDecorated
-      );
-
-    if (!substrateAddressDecorated)
-      throw new GqlCustomError({
-        message: 'Substrate Address is not provided.',
-        code: GqlErrorCodes.SIGNED_MESSAGE_TEMPLATE_ADDRESS_NOT_PROVIDED
-      });
-
-    const template: SignedMessageWithDetails | null = {
-      action,
-      signature: '',
-      address: substrateAddressDecorated,
-      payload: {}
-    };
-
-    switch (action) {
-      case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
-        template.payload = sortObj({
-          nonce,
-          action
-        });
-        break;
-      case SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT:
-        template.payload = sortObj({
-          nonce,
-          action
-        });
-        break;
-    }
-
-    return {
-      messageTpl: encodeURIComponent(JSON.stringify(template))
-    };
-  }
 
   async parseAndVerifySignedMessageWithDetails(
     signedMessageWithDetails: string
@@ -131,6 +88,71 @@ export class SignedMessageService {
     return data;
   }
 
+  async getMessageWithAction(
+    action: SignedMessageAction,
+    messagePayloadArgs: SignedMessagePayloadDto
+  ): Promise<SignedMessageWithActionTemplateResponseDto> {
+    const substrateAddressDecorated =
+      this.cryptoUtils.substrateAddressToSubsocialFormat(
+        messagePayloadArgs.substrateAddress
+      );
+    const nonce =
+      await this.signatureNonceService.getOrCreateNonceBySubstrateAccountId(
+        substrateAddressDecorated
+      );
+
+    if (!substrateAddressDecorated)
+      throw new GqlCustomError({
+        message: 'Substrate Address is not provided.',
+        code: GqlErrorCodes.SIGNED_MESSAGE_TEMPLATE_ADDRESS_NOT_PROVIDED
+      });
+
+    const template: SignedMessageWithDetails | null = {
+      action,
+      signature: '',
+      address: substrateAddressDecorated,
+      payload: {}
+    };
+
+    switch (action) {
+      case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
+        template.payload = sortObj({
+          nonce,
+          action
+        });
+        break;
+      case SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT:
+        template.payload = sortObj({
+          nonce,
+          action
+        });
+        break;
+      case SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS:
+        template.payload = sortObj({
+          nonce,
+          action,
+          fcmToken: messagePayloadArgs.fcmToken
+        });
+        break;
+      case SignedMessageAction.DELETE_FCM_TOKEN_FROM_ADDRESS:
+        template.payload = sortObj({
+          nonce,
+          action,
+          fcmToken: messagePayloadArgs.fcmToken
+        });
+        break;
+      default:
+        throw new GqlCustomError({
+          message: 'Invalid action',
+          code: GqlErrorCodes.SIGNED_MESSAGE_INVALID_ACTION
+        });
+    }
+
+    return {
+      messageTpl: encodeURIComponent(JSON.stringify(template))
+    };
+  }
+
   async commitModerationSignedMessage(
     signedMessage: string
   ): Promise<CommitSignedMessageResponse> {
@@ -164,6 +186,16 @@ export class SignedMessageService {
         break;
       case SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT:
         return this.telegramAccountsLinkService.unlinkTelegramAccountWithSignedMessage(
+          parsedMsg
+        );
+        break;
+      case SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS:
+        return this.fcmAccountsLinkService.addFcmTokenToAddressWithSignedMessage(
+          parsedMsg
+        );
+        break;
+      case SignedMessageAction.DELETE_FCM_TOKEN_FROM_ADDRESS:
+        return this.fcmAccountsLinkService.deleteFcmTokenFromAddressWithSignedMessage(
           parsedMsg
         );
         break;

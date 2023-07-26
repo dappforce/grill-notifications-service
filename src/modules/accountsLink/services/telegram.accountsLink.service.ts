@@ -7,8 +7,7 @@ import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
   SignedMessageAction,
   SignedMessageWithDetails
-} from '../dto/substrateTgAccountsLinkingMsg.dto';
-import { AccountsLinkingMessageTemplateGqlType } from '../../signedMessage/dto/response/accountsLinkingMessageTemplate.gql.type';
+} from '../../signedMessage/dto/signedMessage.dto';
 import { ProcessLinkingIdInputTelegramDto } from '../dto/processLinkingIdInput.telegram.dto';
 import { LinkedTgAccountsToSubstrateAccountResponseType } from '../dto/response/linkedTgAccountsToSubstrateAccount.response.dto';
 import { AccountsLinkService } from './accountsLink.service';
@@ -20,7 +19,6 @@ import * as crypto from 'crypto';
 import { ValidationError } from '@nestjs/apollo';
 import { UnlinkTelegramAccountResponseDto } from '../dto/response/unlinkTelegramAccount.response.dto';
 import { ProcessLinkingIdOrAddressResponseTelegramDto } from '../dto/response/processLinkingIdOrAddressResponse.telegram.dto';
-import { SignedMessageService } from '../../signedMessage/services/signedMessage.service';
 import { SignatureNonceService } from '../../signedMessage/services/signatureNonce.service';
 
 @Injectable()
@@ -32,7 +30,6 @@ export class TelegramAccountsLinkService {
     public telegramTemporaryLinkingIdRepository: MongoRepository<TelegramTemporaryLinkingId>,
     @Inject(forwardRef(() => AccountsLinkService))
     public accountsLinkService: AccountsLinkService,
-    public signedMessageService: SignedMessageService,
     public cryptoUtils: CryptoUtils,
     public commonUtils: CommonUtils,
     @Inject(forwardRef(() => SignatureNonceService))
@@ -55,30 +52,6 @@ export class TelegramAccountsLinkService {
         following: { $eq: following }
       }
     });
-  }
-
-  async getTelegramBotLinkingMessage(
-    action: SignedMessageAction,
-    substrateAccount: string
-  ): Promise<AccountsLinkingMessageTemplateGqlType> {
-    // @ts-ignore
-    let tpl: SignedMessageWithDetails = {
-      action,
-      signature: '',
-      address:
-        this.cryptoUtils.substrateAddressToSubsocialFormat(substrateAccount),
-      payload: sortObj({
-        nonce:
-          await this.signatureNonceService.getOrCreateNonceBySubstrateAccountId(
-            substrateAccount
-          ),
-        action
-      })
-    };
-
-    return {
-      messageTpl: encodeURIComponent(JSON.stringify(tpl))
-    };
   }
 
   async ensureTemporaryLinkingIdExpiration(

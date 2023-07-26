@@ -10,6 +10,7 @@ import { TelegramTemporaryLinkingId } from './typeorm/telegramTemporaryLinkingId
 import { CommonUtils } from '../../common/utils/common.util';
 import { SignatureNonceService } from '../signedMessage/services/signatureNonce.service';
 import { SignatureNonce } from '../signedMessage/typeorm/signatureNonce.entity';
+import { FcmAccountsLinkService } from './services/fcm.accountsLink.service';
 
 @Module({
   providers: [
@@ -18,7 +19,8 @@ import { SignatureNonce } from '../signedMessage/typeorm/signatureNonce.entity';
     AccountsLinkingGqlResolver,
     CryptoUtils,
     CommonUtils,
-    SignatureNonceService
+    SignatureNonceService,
+    FcmAccountsLinkService
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -28,6 +30,10 @@ import { SignatureNonce } from '../signedMessage/typeorm/signatureNonce.entity';
       SignatureNonce
     ])
   ],
-  exports: [AccountsLinkService, TelegramAccountsLinkService]
+  exports: [
+    AccountsLinkService,
+    TelegramAccountsLinkService,
+    FcmAccountsLinkService
+  ]
 })
 export class AccountsLinkModule {}
