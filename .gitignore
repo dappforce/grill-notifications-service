@@ -37,4 +37,3 @@ lerna-debug.log*
 # Envs
 /.env.local
 /session_db.json
-/gl-notifications-dev-firebase-adminsdk-dev.json

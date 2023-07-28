@@ -55,8 +55,8 @@ describe('Link unlink Accounts', () => {
     // });
     const payloadLink = sortObj({
       action: SignedMessageAction.ADD_FCM_TOKEN_TO_ADDRESS,
-      nonce: 6,
-      fcmToken: 'token'
+      nonce: 8,
+      fcmToken: 'cVrEofehf-8yDitoRhsxX6:APA91bHZy0dy29fByuQLiZNboYCFdXWABoLuGaKiGjL5eYI0kfhf9osfPt9Tr04B5dGZzFytD5L10HA1WcjAWE73Svr50cs6nTipDZEva5No6siMmZokBFd3zwR2UCyS7SAssyeY9H7b'
     });
 
     const payloadUnlink = sortObj({

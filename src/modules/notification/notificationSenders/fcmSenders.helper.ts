@@ -50,12 +50,12 @@ export class FcmSendersHelper {
           notification: { title: 'New reply!', body: triggerData.post.summary },
           data: msgData,
           android: {
-            priority: 'normal',
+            priority: 'high',
             data: msgData
           },
           apns: {
             headers: {
-              'apns-priority': '5'
+              'apns-priority': '10'
             }
           },
           webpush: {
@@ -94,12 +94,12 @@ export class FcmSendersHelper {
           notification: { title: 'New reply!', body: triggerData.post.summary },
           data: msgData,
           android: {
-            priority: 'normal',
+            priority: 'high',
             data: msgData
           },
           apns: {
             headers: {
-              'apns-priority': '5'
+              'apns-priority': '10'
             }
           },
           webpush: {
