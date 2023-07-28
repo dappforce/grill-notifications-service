@@ -20,5 +20,11 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "strict": true
+  },
+  "include": ["src"],
+  "exclude": ["migrations"],
+  "watchOptions": {
+    "excludeFiles": ["migrations"]
   }
+
 }

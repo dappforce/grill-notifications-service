@@ -8,10 +8,13 @@ export class NotificationSubscriptionInputType {
 
   @Field({ nullable: false })
   telegramBot: boolean;
+
+  @Field({ nullable: false })
+  fcm: boolean;
 }
 
 @InputType()
-export class NotificationSettingsGqlInput {
+export class NotificationSettingsInputGql {
   @Field({ nullable: false })
   substrateAccountId: string;
 

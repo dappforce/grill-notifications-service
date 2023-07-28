@@ -7,10 +7,9 @@ import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
   SignedMessageAction,
   SignedMessageWithDetails
-} from '../dto/substrateTgAccountsLinkingMsg.dto';
-import { AccountsLinkingMessageTemplateGqlType } from '../graphql/accountsLinkingMessageTemplate.gql.type';
+} from '../../signedMessage/dto/signedMessage.dto';
 import { ProcessLinkingIdInputTelegramDto } from '../dto/processLinkingIdInput.telegram.dto';
-import { LinkedTgAccountsToSubstrateAccountResponseType } from '../graphql/linkedTgAccountsToSubstrateAccount.gql.type';
+import { LinkedTgAccountsToSubstrateAccountResponseType } from '../dto/response/linkedTgAccountsToSubstrateAccount.response.dto';
 import { AccountsLinkService } from './accountsLink.service';
 import { TelegramAccount } from '../typeorm/telegramAccount.entity';
 import { TelegramTemporaryLinkingId } from '../typeorm/telegramTemporaryLinkingId.entity';
@@ -18,9 +17,9 @@ import { CommonUtils } from '../../../common/utils/common.util';
 import { xSocialConfig } from '../../../config';
 import * as crypto from 'crypto';
 import { ValidationError } from '@nestjs/apollo';
-import { UnlinkTelegramAccountResponseDto } from '../dto/unlinkTelegramAccount.response.dto';
-import { ProcessLinkingIdOrAddressResponseTelegramDto } from '../dto/processLinkingIdOrAddressResponse.telegram.dto';
-import { SignatureNonceService } from '../../signatureNonce/services/signatureNonce.service';
+import { UnlinkTelegramAccountResponseDto } from '../dto/response/unlinkTelegramAccount.response.dto';
+import { ProcessLinkingIdOrAddressResponseTelegramDto } from '../dto/response/processLinkingIdOrAddressResponse.telegram.dto';
+import { SignatureNonceService } from '../../signedMessage/services/signatureNonce.service';
 
 @Injectable()
 export class TelegramAccountsLinkService {
@@ -53,30 +52,6 @@ export class TelegramAccountsLinkService {
         following: { $eq: following }
       }
     });
-  }
-
-  async getTelegramBotLinkingMessage(
-    action: SignedMessageAction,
-    substrateAccount: string
-  ): Promise<AccountsLinkingMessageTemplateGqlType> {
-    // @ts-ignore
-    let tpl: SignedMessageWithDetails = {
-      action,
-      signature: '',
-      address:
-        this.cryptoUtils.substrateAddressToSubsocialFormat(substrateAccount),
-      payload: sortObj({
-        nonce:
-          await this.signatureNonceService.getOrCreateNonceBySubstrateAccountId(
-            substrateAccount
-          ),
-        action
-      })
-    };
-
-    return {
-      messageTpl: encodeURIComponent(JSON.stringify(tpl))
-    };
   }
 
   async ensureTemporaryLinkingIdExpiration(
@@ -364,26 +339,15 @@ export class TelegramAccountsLinkService {
   }
 
   async unlinkTelegramAccountWithSignedMessage(
-    signedMsgWithDetails: string
+    signedMsParsed: SignedMessageWithDetails
   ): Promise<UnlinkTelegramAccountResponseDto> {
-    const parsedMessageWithDetails =
-      await this.accountsLinkService.parseAndVerifySignedMessageWithDetails(
-        decodeURIComponent(signedMsgWithDetails)
-      );
-
-    if (
-      parsedMessageWithDetails.payload.action !==
-      SignedMessageAction.UNLINK_TELEGRAM_ACCOUNT
-    )
-      throw new Error(`Invalid action.`);
-
     const result = this.unlinkTelegramAccount({
-      substrateAccount: parsedMessageWithDetails.address,
+      substrateAccount: signedMsParsed.address,
       following: false
     });
 
     await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-      parsedMessageWithDetails.address
+      signedMsParsed.address
     );
 
     return result;

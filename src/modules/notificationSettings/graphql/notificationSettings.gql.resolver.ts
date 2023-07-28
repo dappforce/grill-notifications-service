@@ -1,6 +1,6 @@
 import { Args, Query, Resolver, Mutation } from '@nestjs/graphql';
 import { NotificationSettingsService } from '../services/notificationSettings.service';
-import { NotificationSettingsGqlInput } from './notificationSettings.gql.input';
+import { NotificationSettingsInputGql } from '../dto/input/notificationSettings.input.gql';
 import { UseGuards } from '@nestjs/common';
 import { AuthGqlGuard } from '../../../common/guards/admin.gql.guard';
 import { NotificationSettings } from '../typeorm/notificationSettings.entity';
@@ -21,7 +21,7 @@ export class NotificationSettingsGqlResolver {
   @UseGuards(AuthGqlGuard)
   createNotificationSettingsToAccount(
     @Args('createNotificationSettingsInput')
-    createNotificationSettingsInput: NotificationSettingsGqlInput
+    createNotificationSettingsInput: NotificationSettingsInputGql
   ) {
     return this.notificationSettingsService.createToAccount(
       createNotificationSettingsInput
@@ -32,7 +32,7 @@ export class NotificationSettingsGqlResolver {
   @UseGuards(AuthGqlGuard)
   updateNotificationSettingsToAccount(
     @Args('updateNotificationSettingsInput')
-    updateNotificationSettingsInput: NotificationSettingsGqlInput
+    updateNotificationSettingsInput: NotificationSettingsInputGql
   ) {
     return this.notificationSettingsService.updateToAccount(
       updateNotificationSettingsInput

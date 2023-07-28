@@ -5,7 +5,7 @@ import {
   NotificationSettings,
   NotificationSubscription
 } from '../typeorm/notificationSettings.entity';
-import { NotificationSettingsGqlInput } from '../graphql/notificationSettings.gql.input';
+import { NotificationSettingsInputGql } from '../dto/input/notificationSettings.input.gql';
 
 @Injectable()
 export class NotificationSettingsService {
@@ -30,7 +30,7 @@ export class NotificationSettingsService {
     });
   }
 
-  async createToAccount(input: NotificationSettingsGqlInput) {
+  async createToAccount(input: NotificationSettingsInputGql) {
     const subscriptionEvents = [];
     const subscriptions = input.subscriptions.map((sub) => {
       subscriptionEvents.push(sub.eventName);
@@ -47,7 +47,7 @@ export class NotificationSettingsService {
     return ent;
   }
 
-  async updateToAccount(input: NotificationSettingsGqlInput) {
+  async updateToAccount(input: NotificationSettingsInputGql) {
     const existingSettings = await this.notificationSettingsRepository.findOne({
       where: {
         substrateAccountId: input.substrateAccountId
@@ -78,6 +78,7 @@ export class NotificationSettingsService {
     ];
     return defaultEventNames.map((eventName) => ({
       telegramBot: true,
+      fcm: true,
       eventName
     }));
   }
