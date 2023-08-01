@@ -37,10 +37,15 @@ export class CommonNotificationSendersHelper {
   }
 
   createPostUrlFromNotificationTriggerData(
-    triggerData: NotificationEventDataForSubstrateAccountDto
+    triggerData: NotificationEventDataForSubstrateAccountDto,
+    targetAccount?: string
   ): string | undefined {
     try {
-      return `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${triggerData.post.rootPost.space.id}/${triggerData.post.rootPost.id}/${triggerData.post.id}`;
+      return `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${
+        triggerData.post.rootPost.space.id
+      }/${triggerData.post.rootPost.id}/${triggerData.post.id}${
+        targetAccount ? `?targetAcc=${targetAccount}` : ''
+      }`;
     } catch (e) {
       return undefined;
     }

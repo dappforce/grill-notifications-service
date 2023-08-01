@@ -26,12 +26,14 @@ export class TelegramNotificationSendersHelper {
     notificationRecipientData: AccountNotificationData,
     triggerData: NotificationEventDataForSubstrateAccountDto
   ) {
+    const checkUrl =
+      this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
+        triggerData,
+        notificationRecipientData.substrateAccountId
+      );
+
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated: {
-        let checkUrl =
-          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
-            triggerData
-          );
         await this.bot.telegram.sendMessage(
           notificationRecipientData.notificationServiceAccountId,
           this.getTextToCommentReplyCreated(triggerData),
@@ -45,10 +47,6 @@ export class TelegramNotificationSendersHelper {
       }
 
       case EventName.ExtensionDonationCreated: {
-        let checkUrl =
-          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
-            triggerData
-          );
         const txExplorerUrl =
           this.commonNotificationSendersHelper.createTxExplorerUrlForDonation(
             triggerData.extension.txHash,
