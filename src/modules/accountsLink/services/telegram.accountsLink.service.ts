@@ -339,16 +339,18 @@ export class TelegramAccountsLinkService {
   }
 
   async unlinkTelegramAccountWithSignedMessage(
-    signedMsParsed: SignedMessageWithDetails
+    signedMsParsed: SignedMessageWithDetails,
+    increaseNonce: boolean = false
   ): Promise<UnlinkTelegramAccountResponseDto> {
     const result = this.unlinkTelegramAccount({
       substrateAccount: signedMsParsed.address,
       following: false
     });
 
-    await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-      signedMsParsed.address
-    );
+    if (increaseNonce)
+      await this.signatureNonceService.increaseNonceBySubstrateAccountId(
+        signedMsParsed.address
+      );
 
     return result;
   }

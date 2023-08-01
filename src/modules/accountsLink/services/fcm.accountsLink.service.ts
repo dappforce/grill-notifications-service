@@ -48,10 +48,6 @@ export class FcmAccountsLinkService {
       accountLink.entity
     );
 
-    await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-      signedMsgParsed.address
-    );
-
     return {
       success: true
     };
@@ -75,10 +71,6 @@ export class FcmAccountsLinkService {
 
     await this.accountsLinkService.accountsLinkRepository.save(
       accountLink.entity
-    );
-
-    await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-      signedMsgParsed.address
     );
 
     return {

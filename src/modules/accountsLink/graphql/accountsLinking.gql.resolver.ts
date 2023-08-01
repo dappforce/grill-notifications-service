@@ -45,7 +45,8 @@ export class AccountsLinkingGqlResolver {
         await this.signedMessageService.parseAndVerifySignedMessageWithDetails(
           decodeURIComponent(signedMessageWithDetails.trim())
         ),
-        SignedMessageAction.LINK_TELEGRAM_ACCOUNT
+        SignedMessageAction.LINK_TELEGRAM_ACCOUNT,
+        true
       )
     };
   }
@@ -65,7 +66,8 @@ export class AccountsLinkingGqlResolver {
     return this.telegramAccountsLinkService.unlinkTelegramAccountWithSignedMessage(
       await this.signedMessageService.parseAndVerifySignedMessageWithDetails(
         decodeURIComponent(signedMessageWithDetails.trim())
-      )
+      ),
+      true
     );
   }
 }

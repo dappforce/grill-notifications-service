@@ -32,7 +32,8 @@ export class AccountsLinkService {
 
   async createTemporaryLinkingId(
     signedMsgParsed: SignedMessageWithDetails,
-    action: SignedMessageAction
+    action: SignedMessageAction,
+    increaseNonce: boolean = false
   ) {
     switch (action) {
       case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
@@ -40,9 +41,10 @@ export class AccountsLinkService {
           await this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
             signedMsgParsed
           );
-        await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-          signedMsgParsed.address
-        );
+        if (increaseNonce)
+          await this.signatureNonceService.increaseNonceBySubstrateAccountId(
+            signedMsgParsed.address
+          );
         return linkingId.id;
       default:
         throw new Error('Invalid action value.');
