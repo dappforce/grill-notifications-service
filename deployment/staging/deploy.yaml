@@ -27,6 +27,14 @@ spec:
               name: grill-notifications-env
           - secretRef:
               name: grill-notifications-secret
+        volumeMounts:
+          - mountPath: "/var/run/secrets/"
+            name: firebase
+            readOnly: true
+      volumes:
+        - name: firebase
+          secret:
+            secretName: grill-notifications-firebase-secret
       imagePullSecrets:
       - name: dockerhub
       restartPolicy: Always
