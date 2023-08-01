@@ -28,6 +28,8 @@ export class xSocialConfig {
   @IsNotEmpty()
   readonly TELEGRAM_BOT_GRILL_REDIRECTION_HREF: string;
   @IsNotEmpty()
+  readonly FIREBASE_ADMIN_SDK_CREDS: string;
+  @IsNotEmpty()
   readonly TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: string;
 
   readonly LOGGER_LEVEL: string;

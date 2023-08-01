@@ -67,9 +67,11 @@ import { SignatureNonce } from './modules/signedMessage/typeorm/signatureNonce.e
         ]
       })
     }),
-    FirebaseModule.forRoot({
-      googleApplicationCredential:
-        './gl-notifications-dev-firebase-adminsdk-dev.json'
+    FirebaseModule.forRootAsync({
+      inject: [xSocialConfig],
+      useFactory: (env: xSocialConfig) => ({
+        googleApplicationCredential: env.FIREBASE_ADMIN_SDK_CREDS
+      })
     }),
     SignedMessageModule,
     NotificationSettingsModule,
