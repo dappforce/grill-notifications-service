@@ -10,6 +10,8 @@ dotenv.config({ path: `${__dirname}/../.env.local` });
 
 export class xSocialConfig {
   @IsNotEmpty()
+  readonly NODE_ENV: string;
+  @IsNotEmpty()
   readonly XSOCIAL_RPC_URL: string;
   @IsNotEmpty()
   readonly IPFS_NODE_URL: string;
