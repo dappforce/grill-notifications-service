@@ -54,6 +54,7 @@ metadata:
   name: grill-notifications-env
   namespace: sub-back
 data:
+  NODE_ENV: "production"
   XSOCIAL_RPC_URL: "wss://xsocial.subsocial.network"
   IPFS_NODE_URL: "https://ipfs.subsocial.network/"
   IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"

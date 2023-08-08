@@ -5,6 +5,12 @@ export enum SquidApiQueryName {
   notifications = 'notifications'
 }
 
+export enum AppEnvironment {
+  development = 'development',
+  staging = 'staging',
+  production = 'production'
+}
+
 @Entity()
 export class SquidDataSubscriptionStatus {
   @ObjectIdColumn()
@@ -16,6 +22,13 @@ export class SquidDataSubscriptionStatus {
     nullable: false
   })
   subscriptionQueryName: SquidApiQueryName;
+
+  @PrimaryColumn({
+    type: 'enum',
+    enum: AppEnvironment,
+    nullable: false
+  })
+  appEnv: AppEnvironment;
 
   @Column()
   lastProcessedBlockNumber: number;
