@@ -37,3 +37,4 @@ lerna-debug.log*
 # Envs
 /.env.local
 /session_db.json
+firebase-admin-sdk-creds.json
