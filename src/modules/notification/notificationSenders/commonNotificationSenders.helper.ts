@@ -43,8 +43,8 @@ export class CommonNotificationSendersHelper {
     try {
       return `${this.xSocialConfig.TELEGRAM_BOT_GRILL_REDIRECTION_HREF}/${
         triggerData.post.rootPost.space.id
-      }/${triggerData.post.rootPost.id}/${triggerData.post.id}${
-        targetAccount ? `?targetAcc=${targetAccount}` : ''
+      }/${triggerData.post.rootPost.id}?messageId=${triggerData.post.id}${
+        targetAccount ? `&targetAcc=${targetAccount}` : ''
       }`;
     } catch (e) {
       return undefined;

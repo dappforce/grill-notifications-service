@@ -55,12 +55,14 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
                   id
                   summary
                   body
+                  title
                   ownedByAccount {
                     id
                   }
                   parentPost {
                     id
                     body
+                    title
                     summary
                   }
                 }
@@ -74,6 +76,7 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
               post {
                 id
                 body
+                title
                 summary
                 kind
                 ownedByAccount {
@@ -84,6 +87,7 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
                 }
                 rootPost {
                   id
+                  title
                   space {
                     id
                   }
@@ -91,6 +95,7 @@ export const getSquidQueryNotificationsFull = (ids: string[]) => `
                 parentPost {
                   id
                   body
+                  title
                   summary
                 }
                 extensions {

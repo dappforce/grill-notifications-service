@@ -34,11 +34,6 @@ export class FcmSendersHelper {
 
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated: {
-        let checkUrl =
-          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
-            triggerData
-          );
-
         const msgData = {
           postId: triggerData.post.id,
           rootPostId: triggerData.post.rootPost.id,
@@ -47,7 +42,10 @@ export class FcmSendersHelper {
         };
 
         const message = {
-          notification: { title: 'New reply!', body: triggerData.post.summary },
+          notification: {
+            title: `New Reply in ${triggerData.post.title}`,
+            body: triggerData.post.summary
+          },
           data: msgData,
           android: {
             priority: 'high',
@@ -79,10 +77,6 @@ export class FcmSendersHelper {
       }
 
       case EventName.ExtensionDonationCreated: {
-        let checkUrl =
-          this.commonNotificationSendersHelper.createPostUrlFromNotificationTriggerData(
-            triggerData
-          );
         const msgData = {
           postId: triggerData.post.id,
           rootPostId: triggerData.post.rootPost.id,
@@ -91,7 +85,13 @@ export class FcmSendersHelper {
         };
 
         const message = {
-          notification: { title: 'New reply!', body: triggerData.post.summary },
+          notification: {
+            title: `🤑 You received a donation of ${this.commonUtils.decorateDonationAmount(
+              triggerData.extension.amount,
+              triggerData.extension.decimals
+            )} ${triggerData.extension.token}`,
+            body: triggerData.post.summary
+          },
           data: msgData,
           android: {
             priority: 'high',
