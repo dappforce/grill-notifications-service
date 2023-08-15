@@ -2,17 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository, Repository } from 'typeorm';
 import {
+  AppEnvironment,
   SquidApiQueryName,
   SquidDataSubscriptionStatus
 } from '../typeorm/squidDataSubscriptionStatus';
 import { SubsocialApi } from '@subsocial/api';
+import { xSocialConfig } from '../../../config';
 
 @Injectable()
 export class DataProvidersService {
   constructor(
     @InjectRepository(SquidDataSubscriptionStatus)
     public squidDataSubscriptionStatusRepository: MongoRepository<SquidDataSubscriptionStatus>,
-    public subsocialApiProvider: SubsocialApi
+    public subsocialApiProvider: SubsocialApi,
+    private readonly xSocialConfig: xSocialConfig
   ) {}
 
   async getOrCreateStatusByQueryName({
@@ -24,7 +27,8 @@ export class DataProvidersService {
   }) {
     let entity = await this.squidDataSubscriptionStatusRepository.findOne({
       where: {
-        subscriptionQueryName: { $eq: name }
+        subscriptionQueryName: { $eq: name },
+        appEnv: { $eq: this.xSocialConfig.NODE_ENV }
       }
     });
 
@@ -49,6 +53,7 @@ export class DataProvidersService {
     entity = new SquidDataSubscriptionStatus();
     entity.subscriptionQueryName = name;
     entity.lastProcessedBlockNumber = currentChainBlockNumber;
+    entity.appEnv = this.xSocialConfig.NODE_ENV as AppEnvironment;
 
     await this.squidDataSubscriptionStatusRepository.save(entity);
     return entity;
@@ -64,7 +69,8 @@ export class DataProvidersService {
     let statusEntity = await this.squidDataSubscriptionStatusRepository.findOne(
       {
         where: {
-          subscriptionQueryName: { $eq: name }
+          subscriptionQueryName: { $eq: name },
+          appEnv: { $eq: this.xSocialConfig.NODE_ENV }
         }
       }
     );
