@@ -2,23 +2,19 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { AccountsLink } from '../typeorm/accountsLink.entity';
-import { CryptoUtils } from '../../../common/utils/crypto.util';
 import {
   SignedMessageWithDetails,
-  signedMessage,
   SignedMessageAction
-} from '../dto/substrateTgAccountsLinkingMsg.dto';
-import { sortObj } from 'jsonabc';
-import { EnsureAccountLinkInputDto } from '../dto/ensureAccountLinkInput.dto';
+} from '../../signedMessage/dto/signedMessage.dto';
+import { EnsureAccountLinkInputDto } from '../dto/input/ensureAccountLinkInput.dto';
 import { TelegramAccountsLinkService } from './telegram.accountsLink.service';
-import { SignatureNonceService } from '../../signatureNonce/services/signatureNonce.service';
+import { SignatureNonceService } from '../../signedMessage/services/signatureNonce.service';
 
 @Injectable()
 export class AccountsLinkService {
   constructor(
     @InjectRepository(AccountsLink)
     public accountsLinkRepository: MongoRepository<AccountsLink>,
-    public cryptoUtils: CryptoUtils,
     @Inject(forwardRef(() => SignatureNonceService))
     public signatureNonceService: SignatureNonceService,
     @Inject(forwardRef(() => TelegramAccountsLinkService))
@@ -35,29 +31,21 @@ export class AccountsLinkService {
   }
 
   async createTemporaryLinkingId(
-    signedMsgWithDetails: string,
-    action: SignedMessageAction
+    signedMsgParsed: SignedMessageWithDetails,
+    action: SignedMessageAction,
+    increaseNonce: boolean = false
   ) {
-    const parsedMessageWithDetails =
-      await this.parseAndVerifySignedMessageWithDetails(
-        decodeURIComponent(signedMsgWithDetails)
-      );
     switch (action) {
       case SignedMessageAction.LINK_TELEGRAM_ACCOUNT:
-        if (
-          parsedMessageWithDetails.payload.action !==
-          SignedMessageAction.LINK_TELEGRAM_ACCOUNT
-        )
-          throw new Error(`Invalid action.`);
-
         const linkingId =
           await this.telegramAccountsLinkService.getOrCreateTemporaryLinkingId(
-            parsedMessageWithDetails
+            signedMsgParsed
           );
-        await this.signatureNonceService.increaseNonceBySubstrateAccountId(
-          parsedMessageWithDetails.address
-        );
-        return linkingId;
+        if (increaseNonce)
+          await this.signatureNonceService.increaseNonceBySubstrateAccountId(
+            signedMsgParsed.address
+          );
+        return linkingId.id;
       default:
         throw new Error('Invalid action value.');
     }
@@ -75,6 +63,7 @@ export class AccountsLinkService {
       notificationServiceAccountId;
     newAccountsLinkEntity.notificationServiceName = notificationServiceName;
     newAccountsLinkEntity.substrateAccountId = substrateAccountId;
+    newAccountsLinkEntity.fcmTokens = [];
     newAccountsLinkEntity.active = active;
     newAccountsLinkEntity.following = following;
     newAccountsLinkEntity.createdAt = new Date();
@@ -89,13 +78,14 @@ export class AccountsLinkService {
     notificationServiceName,
     notificationServiceAccountId,
     substrateAccountId,
+    keepExistingActiveStatus = false,
     following,
     active
   }: EnsureAccountLinkInputDto): Promise<{
     existing: boolean;
     entity: AccountsLink;
   }> {
-    if (!following) {
+    if (!following && !keepExistingActiveStatus) {
       const allLinksForSubstrateAccount =
         await this.accountsLinkRepository.find({
           where: {
@@ -172,44 +162,5 @@ export class AccountsLinkService {
         })
       };
     }
-  }
-
-  async parseAndVerifySignedMessageWithDetails(
-    signedMessageWithDetails: string
-  ): Promise<SignedMessageWithDetails> {
-    let parsedMessage = null;
-    try {
-      parsedMessage = JSON.parse(signedMessageWithDetails);
-    } catch (e) {
-      throw new Error('Provided invalid message. Json parse'); // TODO add error handler
-    }
-    if (!signedMessageWithDetails) throw new Error(); // TODO add error handler
-
-    const messageValidation = signedMessage.safeParse(parsedMessage);
-
-    if (!messageValidation.success) {
-      throw new Error('Provided invalid message.'); // TODO add error handler
-    }
-
-    const { data } = messageValidation;
-
-    if (
-      !(await this.signatureNonceService.isValidForSubstrateAccount(
-        data.address,
-        data.payload.nonce
-      ))
-    )
-      throw new Error('Provided invalid message. Nonce is invalid.');
-
-    if (
-      !this.cryptoUtils.isValidSignature({
-        address: data.address,
-        signature: data.signature,
-        message: JSON.stringify(sortObj(data.payload))
-      })
-    )
-      throw new Error('Signature is invalid.'); // TODO add error handler
-
-    return data;
   }
 }

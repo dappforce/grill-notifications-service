@@ -30,6 +30,7 @@ type UnlinkTelegramAccountResponseDto {
 type NotificationSubscription {
   eventName: String!
   telegramBot: Boolean!
+  fcm: Boolean!
 }
 
 type NotificationSettingsGql {
@@ -39,21 +40,66 @@ type NotificationSettingsGql {
   _id: String!
 }
 
+type SignedMessageWithActionTemplateResponseDto {
+  messageTpl: String!
+}
+
+type CommitSignedMessageResponseData {
+  tmpLinkingIdForTelegram: String
+}
+
+type CommitSignedMessageResponse {
+  data: CommitSignedMessageResponseData
+  success: Boolean!
+  message: String
+}
+
 type Query {
-  notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
   linkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  linkAddressWithTelegramAccountMessage(input: LinkAddressWithTelegramAccountMessageInput!): SignedMessageWithActionTemplateResponseDto!
   unlinkingMessageForTelegramAccount(substrateAccount: String!): AccountsLinkingMessageTemplateGql!
+  unlinkAddressFromTelegramAccountMessage(input: UnlinkAddressWithTelegramAccountMessageInput!): SignedMessageWithActionTemplateResponseDto!
+  addFcmTokenToAddressMessage(input: AddFcmTokenToAddressMessageMessageInput!): SignedMessageWithActionTemplateResponseDto!
+  deleteFcmTokenFromAddressMessage(input: DeleteFcmTokenFromAddressMessageInput!): SignedMessageWithActionTemplateResponseDto!
   telegramAccountsLinkedToSubstrateAccount(substrateAccount: String!): LinkedTgAccountsToSubstrateAccountResponseType!
+  notificationSettingsByAccountId(id: String!): NotificationSettingsGql!
+}
+
+input LinkAddressWithTelegramAccountMessageInput {
+  substrateAddress: String!
+}
+
+input UnlinkAddressWithTelegramAccountMessageInput {
+  substrateAddress: String!
+}
+
+input AddFcmTokenToAddressMessageMessageInput {
+  substrateAddress: String!
+  fcmToken: String!
+}
+
+input DeleteFcmTokenFromAddressMessageInput {
+  substrateAddress: String!
+  fcmToken: String!
 }
 
 type Mutation {
-  createNotificationSettingsToAccount(createNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
-  updateNotificationSettingsToAccount(updateNotificationSettingsInput: NotificationSettingsGqlInput!): NotificationSettingsGql!
+  commitSignedMessageWithAction(signedMessage: String!): CommitSignedMessageResponse
+
+  """
+  This mutation is deprecated and "commitSignedMessageWithAction" must be used instead.
+  """
   createTemporaryLinkingIdForTelegram(signedMessageWithDetails: String!): CreateTemporaryLinkingIdForTelegramResponseDto!
+
+  """
+  This mutation is deprecated and "commitSignedMessageWithAction" must be used instead.
+  """
   unlinkTelegramAccount(signedMessageWithDetails: String!): UnlinkTelegramAccountResponseDto!
+  createNotificationSettingsToAccount(createNotificationSettingsInput: NotificationSettingsInputGql!): NotificationSettingsGql!
+  updateNotificationSettingsToAccount(updateNotificationSettingsInput: NotificationSettingsInputGql!): NotificationSettingsGql!
 }
 
-input NotificationSettingsGqlInput {
+input NotificationSettingsInputGql {
   substrateAccountId: String!
   subscriptions: [NotificationSubscriptionInputType!]!
 }
@@ -61,4 +107,5 @@ input NotificationSettingsGqlInput {
 input NotificationSubscriptionInputType {
   eventName: String!
   telegramBot: Boolean!
+  fcm: Boolean!
 }

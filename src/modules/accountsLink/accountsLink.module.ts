@@ -8,6 +8,9 @@ import { TelegramAccountsLinkService } from './services/telegram.accountsLink.se
 import { TelegramAccount } from './typeorm/telegramAccount.entity';
 import { TelegramTemporaryLinkingId } from './typeorm/telegramTemporaryLinkingId.entity';
 import { CommonUtils } from '../../common/utils/common.util';
+import { SignatureNonceService } from '../signedMessage/services/signatureNonce.service';
+import { SignatureNonce } from '../signedMessage/typeorm/signatureNonce.entity';
+import { FcmAccountsLinkService } from './services/fcm.accountsLink.service';
 
 @Module({
   providers: [
@@ -15,15 +18,22 @@ import { CommonUtils } from '../../common/utils/common.util';
     TelegramAccountsLinkService,
     AccountsLinkingGqlResolver,
     CryptoUtils,
-    CommonUtils
+    CommonUtils,
+    SignatureNonceService,
+    FcmAccountsLinkService
   ],
   imports: [
     TypeOrmModule.forFeature([
       AccountsLink,
       TelegramAccount,
-      TelegramTemporaryLinkingId
+      TelegramTemporaryLinkingId,
+      SignatureNonce
     ])
   ],
-  exports: [AccountsLinkService, TelegramAccountsLinkService]
+  exports: [
+    AccountsLinkService,
+    TelegramAccountsLinkService,
+    FcmAccountsLinkService
+  ]
 })
 export class AccountsLinkModule {}

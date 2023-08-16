@@ -2,6 +2,7 @@ import { Entity, PrimaryColumn, Column, ObjectIdColumn } from 'typeorm';
 
 export enum NotificationServiceName {
   telegram = 'telegram',
+  fcm = 'fcm',
   discord = 'discord',
   email = 'email'
 }
@@ -29,6 +30,9 @@ export class AccountsLink {
 
   @Column()
   notificationServiceAccountId: string;
+
+  @Column({ nullable: true })
+  fcmTokens: string[];
 
   @Column()
   following: boolean;

@@ -24,5 +24,3 @@ COPY --from=builder /opt/subsocial/app .
 
 # Start the server using the production build
 CMD [ "dist/main.js" ]
-
-

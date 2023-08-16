@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
+import { newLogger } from '@subsocial/utils';
 
 @Injectable()
 export class CommonUtils {
+  private subLogger = newLogger('OpenAI Assistant');
+
   constructor() {}
 
   decorateDonationAmount(amount: string, decimals: number): string {
@@ -29,5 +32,9 @@ export class CommonUtils {
     } catch (e) {
       return number;
     }
+  }
+
+  subsocialLogger() {
+    return this.subLogger;
   }
 }

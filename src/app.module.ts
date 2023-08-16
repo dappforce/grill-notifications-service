@@ -23,9 +23,11 @@ import { DataProvidersModule } from './modules/dataProviders/dataProviders.modul
 import { SquidDataSubscriptionStatus } from './modules/dataProviders/typeorm/squidDataSubscriptionStatus';
 import { TelegramAccount } from './modules/accountsLink/typeorm/telegramAccount.entity';
 import { TelegramTemporaryLinkingId } from './modules/accountsLink/typeorm/telegramTemporaryLinkingId.entity';
-import { SignatureNonceModule } from './modules/signatureNonce/signatureNonce.module';
-import { SignatureNonce } from './modules/signatureNonce/typeorm/signatureNonce.entity';
 import { RobotTxtMiddleware } from './middleware/robotTxt.middleware';
+import { FirebaseModule } from 'nestjs-firebase';
+import { SignedMessageModule } from './modules/signedMessage/signedMessage.module';
+import { formatError } from './common/utils/errorFormatting.util';
+import { SignatureNonce } from './modules/signedMessage/typeorm/signatureNonce.entity';
 
 @Module({
   imports: [
@@ -45,7 +47,8 @@ import { RobotTxtMiddleware } from './middleware/robotTxt.middleware';
       autoSchemaFile: './src/schema.gql',
       driver: ApolloDriver,
       playground: true,
-      context: ({ req }) => ({ headers: req.headers })
+      context: ({ req }) => ({ headers: req.headers }),
+      formatError
     }),
     TypeOrmModule.forRootAsync({
       inject: [xSocialConfig],
@@ -64,7 +67,13 @@ import { RobotTxtMiddleware } from './middleware/robotTxt.middleware';
         ]
       })
     }),
-    SignatureNonceModule,
+    FirebaseModule.forRootAsync({
+      inject: [xSocialConfig],
+      useFactory: (env: xSocialConfig) => ({
+        googleApplicationCredential: env.FIREBASE_ADMIN_SDK_CREDS
+      })
+    }),
+    SignedMessageModule,
     NotificationSettingsModule,
     AccountsLinkModule,
     NotificationModule,

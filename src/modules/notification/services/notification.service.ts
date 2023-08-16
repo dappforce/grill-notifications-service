@@ -12,6 +12,7 @@ import { TelegrafContext } from '../../../interfaces/context.interface';
 import { GRILL_NOTIFICATIONS_BOT_NAME } from '../../../app.constants';
 import { TelegramNotificationSendersHelper } from '../notificationSenders/telegramNotificationSenders.helper';
 import { AccountNotificationData } from '../dto/types';
+import { FcmSendersHelper } from '../notificationSenders/fcmSenders.helper';
 
 @Injectable()
 export class NotificationService {
@@ -20,6 +21,7 @@ export class NotificationService {
     private readonly accountsLinkService: AccountsLinkService,
     private readonly notificationSettingsService: NotificationSettingsService,
     private readonly telegramNotificationSendersHelper: TelegramNotificationSendersHelper,
+    private readonly fcmSendersHelper: FcmSendersHelper,
     @InjectBot(GRILL_NOTIFICATIONS_BOT_NAME)
     private bot: Telegraf<TelegrafContext>
   ) {}
@@ -34,7 +36,10 @@ export class NotificationService {
 
     if (activeAccountsLinks.length === 0) return;
 
-    const accountNotificationData = new Map<string, AccountNotificationData>();
+    const accountNotificationDataMap = new Map<
+      string,
+      AccountNotificationData
+    >();
 
     for (const link of activeAccountsLinks) {
       let accNotificationSettings =
@@ -50,42 +55,69 @@ export class NotificationService {
           });
       }
       // TODO "notificationServiceAccountId" should be changed in case switching to One-to-Mane linking schema.
-      accountNotificationData.set(link.notificationServiceAccountId, {
+      accountNotificationDataMap.set(link.notificationServiceAccountId, {
         ...link,
         notificationSettings: accNotificationSettings
       });
     }
 
-    for (const accountData of [...accountNotificationData.values()]) {
-      const eventSubscriptionData =
-        accountData.notificationSettings.subscriptions.find(
+    for (const accountLinkDataWithSettings of [
+      ...accountNotificationDataMap.values()
+    ]) {
+      const accountEventSubscriptionSetting =
+        accountLinkDataWithSettings.notificationSettings.subscriptions.find(
           (sub) => sub.eventName === triggerData.eventName
         );
       // If account doesn't have subscription to current event, we skip notification.
-      if (!eventSubscriptionData) continue;
+      if (!accountEventSubscriptionSetting) continue;
 
-      await this.processEventSubscription(
-        eventSubscriptionData,
-        accountData,
-        triggerData
-      );
+      /**
+       * accountEventSubscriptionSetting - user's notification settings for specific on-chain event (triggerData.eventName)
+       * accountLinkDataWithSettings - full user's notification settings (entity NotificationSettings)
+       * triggerData - on-chain data from the indexer
+       *
+       */
+
+      switch (accountLinkDataWithSettings.notificationServiceName) {
+        case NotificationServiceName.telegram: {
+          if (accountEventSubscriptionSetting.telegramBot) {
+            await this.telegramNotificationSendersHelper.sendMessageTelegramBot(
+              accountLinkDataWithSettings,
+              triggerData
+            );
+          }
+          break;
+        }
+        case NotificationServiceName.fcm: {
+          if (accountEventSubscriptionSetting.fcm) {
+            await this.fcmSendersHelper.sendMessageFcm(
+              accountLinkDataWithSettings,
+              triggerData
+            );
+          }
+          break;
+        }
+      }
     }
   }
 
-  async processEventSubscription(
-    eventSubscriptionData: NotificationSubscription,
-    notificationRecipientData: AccountNotificationData,
-    triggerData: NotificationEventDataForSubstrateAccountDto
-  ) {
-    if (
-      eventSubscriptionData.telegramBot &&
-      notificationRecipientData.notificationServiceName ===
-        NotificationServiceName.telegram
-    ) {
-      await this.telegramNotificationSendersHelper.sendMessageTelegramBot(
-        notificationRecipientData,
-        triggerData
-      );
-    }
-  }
+  // async processAccountEventSubscription(
+  //   eventSubscriptionData: NotificationSubscription,
+  //   notificationRecipientData: AccountNotificationData,
+  //   triggerData: NotificationEventDataForSubstrateAccountDto
+  // ) {
+  //   /**
+  //    * Check if this particular accountsLink (notificationRecipientData) is
+  //    */
+  //   if (
+  //     eventSubscriptionData.telegramBot &&
+  //     notificationRecipientData.notificationServiceName ===
+  //       NotificationServiceName.telegram
+  //   ) {
+  //     await this.telegramNotificationSendersHelper.sendMessageTelegramBot(
+  //       notificationRecipientData,
+  //       triggerData
+  //     );
+  //   }
+  // }
 }

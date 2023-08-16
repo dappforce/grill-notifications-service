@@ -16,8 +16,8 @@ export class NotificationSubscription {
   telegramBot: boolean;
 
   // TODO: implement other types of notifications
-  // @Column({ nullable: false })
-  // email: boolean;
+  @Column({ nullable: false })
+  fcm: boolean;
 }
 
 @ObjectType('NotificationSettingsGql')

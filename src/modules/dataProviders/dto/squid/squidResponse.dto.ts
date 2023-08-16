@@ -24,6 +24,7 @@ export class SquidPost {
   id: string;
   createdAtBlock?: string;
   summary?: string;
+  title?: string;
   body?: string;
   ownedByAccount?: SquidSubstrateAccount;
   rootPost?: SquidPost;
