@@ -34,15 +34,20 @@ export class TelegramNotificationSendersHelper {
 
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated: {
-        await this.bot.telegram.sendMessage(
-          notificationRecipientData.notificationServiceAccountId,
-          this.getTextToCommentReplyCreated(triggerData),
-          checkUrl
-            ? this.getKeyboardWithRedirectInlineButton([
-                { text: 'Check here 👉', url: checkUrl }
-              ])
-            : undefined
-        );
+        try {
+          await this.bot.telegram.sendMessage(
+            notificationRecipientData.notificationServiceAccountId,
+            this.getTextToCommentReplyCreated(triggerData),
+            checkUrl
+              ? this.getKeyboardWithRedirectInlineButton([
+                  { text: 'Check here 👉', url: checkUrl }
+                ])
+              : undefined
+          );
+        } catch (e) {
+          console.log(e);
+        }
+
         break;
       }
 
@@ -52,18 +57,23 @@ export class TelegramNotificationSendersHelper {
             triggerData.extension.txHash,
             triggerData.extension.chain
           );
-        await this.bot.telegram.sendMessage(
-          notificationRecipientData.notificationServiceAccountId,
-          this.getTextToExtensionDonationCreated(triggerData),
-          checkUrl
-            ? this.getKeyboardWithRedirectInlineButton([
-                { text: 'Check donation 👉', url: checkUrl },
-                ...(txExplorerUrl
-                  ? [{ text: 'Transaction info 🧾', url: txExplorerUrl }]
-                  : [])
-              ])
-            : undefined
-        );
+        try {
+          await this.bot.telegram.sendMessage(
+            notificationRecipientData.notificationServiceAccountId,
+            this.getTextToExtensionDonationCreated(triggerData),
+            checkUrl
+              ? this.getKeyboardWithRedirectInlineButton([
+                  { text: 'Check donation 👉', url: checkUrl },
+                  ...(txExplorerUrl
+                    ? [{ text: 'Transaction info 🧾', url: txExplorerUrl }]
+                    : [])
+                ])
+              : undefined
+          );
+        } catch (e) {
+          console.log(e);
+        }
+
         break;
       }
       default:
