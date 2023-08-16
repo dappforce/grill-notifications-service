@@ -58,6 +58,7 @@ data:
   XSOCIAL_RPC_URL: "wss://xsocial.subsocial.network"
   IPFS_NODE_URL: "https://ipfs.subsocial.network/"
   IPFS_ADMIN_NODE_URL: "https://gw.crustfiles.app/"
+  FIREBASE_ADMIN_SDK_CREDS: "/var/run/secrets/firebase.json"
   BOT_PORT: "3000"
   API_NO_ADMIN_PROTECTION_STR: "false"
   DATA_PROVIDER_SQUID_WS_URL: "wss://squid.subsquid.io/xsocial-wss/graphql"
