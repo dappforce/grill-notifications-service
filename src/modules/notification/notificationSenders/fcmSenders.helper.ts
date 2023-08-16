@@ -27,9 +27,6 @@ export class FcmSendersHelper {
     notificationRecipientData: AccountNotificationData,
     triggerData: NotificationEventDataForSubstrateAccountDto
   ) {
-    console.log('triggerData >>>');
-
-    console.dir(triggerData, { depth: null });
     if (
       !notificationRecipientData.fcmTokens ||
       notificationRecipientData.fcmTokens.length === 0
@@ -41,6 +38,18 @@ export class FcmSendersHelper {
         triggerData,
         notificationRecipientData.substrateAccountId
       );
+
+    const webpushNotificationsConfig = {
+      icon: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
+      image: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
+      badge: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
+      actions: [
+        {
+          action: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
+          title: 'Grill.chat'
+        }
+      ]
+    };
 
     switch (triggerData.eventName) {
       case EventName.CommentReplyCreated: {
@@ -76,9 +85,7 @@ export class FcmSendersHelper {
             data: msgData,
             notification: {
               ...notificationData,
-              icon: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
-              image: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
-              badge: this.xSocialConfig.FCM_MESSAGE_IMG_URL
+              ...webpushNotificationsConfig
             },
             fcmOptions: {
               link: checkUrl
@@ -93,9 +100,6 @@ export class FcmSendersHelper {
           // @ts-ignore
           message
         );
-
-        console.log('sendResp >>>');
-        console.dir(sendResp, { depth: null });
 
         break;
       }
@@ -113,7 +117,6 @@ export class FcmSendersHelper {
             triggerData.extension.amount,
             triggerData.extension.decimals
           )} ${triggerData.extension.token}`,
-          // body: triggerData.post.summary,
           imageUrl: this.xSocialConfig.FCM_MESSAGE_IMG_URL
         };
 
@@ -136,9 +139,7 @@ export class FcmSendersHelper {
             data: msgData,
             notification: {
               ...notificationData,
-              icon: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
-              image: this.xSocialConfig.FCM_MESSAGE_IMG_URL,
-              badge: this.xSocialConfig.FCM_MESSAGE_IMG_URL
+              ...webpushNotificationsConfig
             },
             fcmOptions: {
               link: checkUrl
