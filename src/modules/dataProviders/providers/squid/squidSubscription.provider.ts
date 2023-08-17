@@ -68,8 +68,6 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
             )
           );
 
-          console.dir(fullData.notifications, { depth: null });
-
           const notProcessedSubDataWithoutWrappers =
             this.filterSubDataNotificationsByContentExtensionWrappers(
               fullData.notifications
