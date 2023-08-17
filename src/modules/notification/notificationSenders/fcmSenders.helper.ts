@@ -94,8 +94,6 @@ export class FcmSendersHelper {
           tokens: notificationRecipientData.fcmTokens || []
         };
 
-        console.dir(message, { depth: null });
-
         const sendResp = await this.firebase.messaging.sendEachForMulticast(
           // @ts-ignore
           message
@@ -152,9 +150,6 @@ export class FcmSendersHelper {
           // @ts-ignore
           message
         );
-
-        console.log('sendResp >>>');
-        console.dir(sendResp, { depth: null });
 
         break;
       }

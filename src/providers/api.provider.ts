@@ -26,8 +26,17 @@ export const ApiProviders: Provider[] = [
       const logger = newLogger('GraphqlWsClient');
       const client = createClient({
         webSocketImpl: WebSocket,
-        url: `${env.DATA_PROVIDER_SQUID_WS_URL}`
+        url: `${env.DATA_PROVIDER_SQUID_WS_URL}`,
+        retryAttempts: Infinity,
+        shouldRetry: () => true,
+        keepAlive: 10000,
       });
+      client.on('error', (e) => logger.info('WS Api ERROR - ', e));
+      client.on('connecting', () => logger.info('WS Api connecting'));
+      client.on('connected', () => logger.info('WS Api connected'));
+      client.on('opened', () => logger.info('WS Api opened'));
+      client.on('closed', () => logger.info('WS Api closed'));
+
       logger.info('WS Api created');
       return client;
     },
