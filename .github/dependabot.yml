@@ -1,0 +1,14 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    reviewers:
+      - "oap75"
+      - "mckrava"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "dependabot"
+    pull-request-branch-name:
+      separator: "/"
