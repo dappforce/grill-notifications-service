@@ -90,6 +90,13 @@ export class SquidSubscriptionNotificationsResponseDto {
   };
 }
 
+export class SquidSubscriptionBatchNotificationsResponseDto {
+  id: string;
+  batchStartBlockNumber: string;
+  batchEndBlockNumber: string;
+  activityIds: string[];
+}
+
 export class SquidSubscriptionsActivitiesResponseDto {
   id: string;
   blockNumber: string;
