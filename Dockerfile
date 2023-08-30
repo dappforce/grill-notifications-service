@@ -6,9 +6,10 @@ WORKDIR /opt/subsocial/app
 
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
+COPY yarn.lock ./
 
 # Install app dependencies
-RUN npm install
+RUN yarn install
 
 # Bundle app source
 COPY . .
