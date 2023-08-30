@@ -6,7 +6,8 @@ import {
   SquidActivitiesResponseDto,
   SquidNotificationsResponseDto,
   SquidSubscriptionNotificationsResponseDto,
-  SquidSubscriptionsActivitiesResponseDto
+  SquidSubscriptionsActivitiesResponseDto,
+  SquidSubscriptionBatchNotificationsResponseDto
 } from '../../dto/squid/squidResponse.dto';
 import { SquidApiQueryName } from '../../typeorm/squidDataSubscriptionStatus';
 import { DataProvidersService } from '../../services/dataProviders.service';
@@ -14,7 +15,8 @@ import { EventName } from '../../dto/squid/squidEvents.dto';
 import { newLogger } from '@subsocial/utils';
 import {
   squidSubQueryNotificationsShort,
-  getSquidQueryNotificationsFull
+  getSquidQueryNotificationsFull,
+  squidSubQueryBatchNotifications
 } from './queries';
 import { SquidHelper } from './squid.helper';
 
@@ -35,38 +37,39 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   subscribeToNotifications() {
     this.graphqlWsClient.subscribe(
       {
-        query: squidSubQueryNotificationsShort
+        query: squidSubQueryBatchNotifications
       },
       {
         next: async (data) => {
           this.logger.info(`New squid status:`);
-          const notProcessedSubData = (await this.filterSubscriptionData(
-            SquidApiQueryName.notifications,
-            <Array<SquidSubscriptionNotificationsResponseDto>>(
-              data.data.notifications
-            )
-          )) as Array<SquidSubscriptionNotificationsResponseDto>;
 
-          this.logger.info(
-            'RAW subscription data :: length - ',
-            (<Array<SquidNotificationsResponseDto>>data.data.notifications)
-              .length
-          );
-          this.logger.info(
-            'filtered subscription data by blockNumber :: length - ',
+          this.logger.info('RAW subscription data :: data >>> ');
+          console.dir(data.data, { depth: null });
+
+          const notProcessedSubData = (await this.filterSubscriptionData(
+            SquidApiQueryName.inBatchNotifications,
+            <Array<SquidSubscriptionBatchNotificationsResponseDto>>(
+              data.data.inBatchNotifications
+            )
+          )) as Array<SquidSubscriptionBatchNotificationsResponseDto>;
+
+          console.log(
+            'notProcessedSubData.length - ',
             notProcessedSubData.length
           );
 
           if (notProcessedSubData.length === 0) return;
 
+          const mergedNotificationIds = notProcessedSubData
+            .map((batchData) => batchData.activityIds)
+            .flat();
+
+          console.log('mergedNotificationIds - ', mergedNotificationIds);
+
           const fullData = await this.squidHelper.runSquidApiQuery<
             SquidApiQueryName.notifications,
             SquidNotificationsResponseDto
-          >(
-            getSquidQueryNotificationsFull(
-              notProcessedSubData.map((item) => item.id)
-            )
-          );
+          >(getSquidQueryNotificationsFull(mergedNotificationIds));
 
           const notProcessedSubDataWithoutWrappers =
             this.filterSubDataNotificationsByContentExtensionWrappers(
@@ -84,7 +87,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
             notProcessedSubDataWithoutWrappers
           );
           await this.dataProvidersService.updateStatusByQueryName({
-            name: SquidApiQueryName.notifications,
+            name: SquidApiQueryName.inBatchNotifications,
             lastProcessedBlockNumber: Number.parseInt(
               notProcessedSubDataWithoutWrappers[0].activity.blockNumber
             )
@@ -114,6 +117,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
     subscriptionEntitiesList: Array<
       | SquidSubscriptionNotificationsResponseDto
       | SquidSubscriptionsActivitiesResponseDto
+      | SquidSubscriptionBatchNotificationsResponseDto
     >
   ) {
     const subscriptionStatusData =
@@ -131,12 +135,22 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
             subscriptionStatusData.lastProcessedBlockNumber
         );
         break;
+
       case SquidApiQueryName.notifications:
         return (<Array<SquidNotificationsResponseDto>>(
           subscriptionEntitiesList
         )).filter(
           (notification) =>
             Number.parseInt(notification.activity.blockNumber) >
+            subscriptionStatusData.lastProcessedBlockNumber
+        );
+        break;
+      case SquidApiQueryName.inBatchNotifications:
+        return (<Array<SquidSubscriptionBatchNotificationsResponseDto>>(
+          subscriptionEntitiesList
+        )).filter(
+          (inBatchNotifications) =>
+            Number.parseInt(inBatchNotifications.batchStartBlockNumber) >
             subscriptionStatusData.lastProcessedBlockNumber
         );
         break;

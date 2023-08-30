@@ -38,6 +38,7 @@ export class TelegramNotificationSendersHelper {
           await this.bot.telegram.sendMessage(
             notificationRecipientData.notificationServiceAccountId,
             this.getTextToCommentReplyCreated(triggerData),
+            // @ts-ignore
             checkUrl
               ? this.getKeyboardWithRedirectInlineButton([
                   { text: 'Check here 👉', url: checkUrl }
@@ -61,6 +62,7 @@ export class TelegramNotificationSendersHelper {
           await this.bot.telegram.sendMessage(
             notificationRecipientData.notificationServiceAccountId,
             this.getTextToExtensionDonationCreated(triggerData),
+            // @ts-ignore
             checkUrl
               ? this.getKeyboardWithRedirectInlineButton([
                   { text: 'Check donation 👉', url: checkUrl },
@@ -124,6 +126,7 @@ export class TelegramNotificationSendersHelper {
       text: string;
       url: string;
     }[]
+    // @ts-ignore
   ): Markup.Markup<InlineKeyboardMarkup> {
     // ): InlineKeyboardMarkup {
     return Markup.inlineKeyboard(

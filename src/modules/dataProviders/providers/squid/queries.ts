@@ -9,6 +9,16 @@ export const squidSubQueryNotificationsShort = `
         }
     `;
 
+export const squidSubQueryBatchNotifications = `
+        subscription {
+          inBatchNotifications(limit: 1, orderBy: batchEndBlockNumber_DESC) {
+            batchStartBlockNumber
+            batchEndBlockNumber
+            activityIds
+          }
+        }
+    `;
+
 export const squidSubQueryActivitiesShort = `
         subscription {
           activities(limit: 500, orderBy: activity_blockNumber_DESC) {

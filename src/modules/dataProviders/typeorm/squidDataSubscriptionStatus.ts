@@ -2,7 +2,8 @@ import { Entity, PrimaryColumn, Column, ObjectIdColumn } from 'typeorm';
 
 export enum SquidApiQueryName {
   activities = 'activities',
-  notifications = 'notifications'
+  notifications = 'notifications',
+  inBatchNotifications = 'inBatchNotifications'
 }
 
 export enum AppEnvironment {
