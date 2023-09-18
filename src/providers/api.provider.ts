@@ -16,6 +16,21 @@ export const ApiProviders: Provider[] = [
       });
       // const substrateApi = await api.substrateApi;
       logger.info('Api created');
+      const substrateApi = await api.substrateApi;
+
+      substrateApi.on('error', (e) =>
+        logger.info('Subsocial SubstateApi ERROR - ', e)
+      );
+      substrateApi.on('connected', () =>
+        logger.info('Subsocial SubstateApi connected')
+      );
+      substrateApi.on('disconnected', () =>
+        logger.info('Subsocial SubstateApi disconnected')
+      );
+      substrateApi.on('ready', () =>
+        logger.info('Subsocial SubstateApi ready')
+      );
+
       return api;
     },
     inject: [xSocialConfig]
@@ -29,7 +44,7 @@ export const ApiProviders: Provider[] = [
         url: `${env.DATA_PROVIDER_SQUID_WS_URL}`,
         retryAttempts: Infinity,
         shouldRetry: () => true,
-        keepAlive: 10000,
+        keepAlive: 10000
       });
       client.on('error', (e) => logger.info('WS Api ERROR - ', e));
       client.on('connecting', () => logger.info('WS Api connecting'));
