@@ -4,6 +4,7 @@ export const commandWithArgsMiddleware: MiddlewareFn<any> = (
   ctx,
   next
 ): void | Promise<unknown> => {
+
   // if (ctx.updateType === 'message' && ctx.updateSubType === 'text') {
   // console.dir(ctx.update, {depth: null})
   if (ctx.updateType === 'message' && ctx.update.message.text) {
