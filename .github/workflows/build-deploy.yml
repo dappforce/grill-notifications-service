@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Extract branch name
         shell: bash
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract branch name
         shell: bash
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract branch name
         shell: bash
