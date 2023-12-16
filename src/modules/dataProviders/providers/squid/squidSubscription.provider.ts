@@ -30,6 +30,7 @@ export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
     public dataProvidersService: DataProvidersService,
     public squidHelper: SquidHelper
   ) {}
+  
   onApplicationBootstrap(): any {
     this.subscribeToNotifications();
   }
