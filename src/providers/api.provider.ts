@@ -15,6 +15,7 @@ export const ApiProviders: Provider[] = [
         ipfsNodeUrl: env.IPFS_NODE_URL
       });
       // const substrateApi = await api.substrateApi;
+      
       logger.info('Api created');
       const substrateApi = await api.substrateApi;
 
