@@ -24,13 +24,14 @@ import { SquidHelper } from './squid.helper';
 export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   private logger = newLogger('Squid Subscription Data Provider');
 
+  
   constructor(
     @Inject('GraphqlWsClient') private graphqlWsClient: GraphqlWsClient,
     private notificationService: NotificationService,
     public dataProvidersService: DataProvidersService,
     public squidHelper: SquidHelper
   ) {}
-  
+
   onApplicationBootstrap(): any {
     this.subscribeToNotifications();
   }
