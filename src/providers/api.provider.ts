@@ -45,6 +45,7 @@ export const ApiProviders: Provider[] = [
         url: `${env.DATA_PROVIDER_SQUID_WS_URL}`,
         retryAttempts: Infinity,
         shouldRetry: () => true,
+        retryWait: () => new Promise((resolve) => setTimeout(resolve, 15000)),
         keepAlive: 10000
       });
       client.on('error', (e) => logger.info('WS Api ERROR - ', e));
