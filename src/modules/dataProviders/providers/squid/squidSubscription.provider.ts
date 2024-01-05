@@ -23,7 +23,6 @@ import { SquidHelper } from './squid.helper';
 @Injectable()
 export class SquidSubscriptionDataProvider implements OnApplicationBootstrap {
   private logger = newLogger('Squid Subscription Data Provider');
-
   
   constructor(
     @Inject('GraphqlWsClient') private graphqlWsClient: GraphqlWsClient,
