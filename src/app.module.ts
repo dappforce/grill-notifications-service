@@ -43,6 +43,7 @@ import { SignatureNonce } from './modules/signedMessage/typeorm/signatureNonce.e
         };
       }
     }),
+      
     GraphQLModule.forRoot<ApolloDriverConfig>({
       autoSchemaFile: './src/schema.gql',
       driver: ApolloDriver,
