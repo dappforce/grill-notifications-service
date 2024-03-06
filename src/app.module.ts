@@ -37,7 +37,8 @@ import { SignatureNonce } from './modules/signedMessage/typeorm/signatureNonce.e
       botName: GRILL_NOTIFICATIONS_BOT_NAME,
       useFactory: (env: xSocialConfig) => {
         return {
-          token: env.NOTIFICATIONS_BOT_TOKEN,
+          token: '7185776626:AAE6WdXow7UK0CdsUkxVRzX-_uiPuSp0sDs',
+          // token: env.NOTIFICATIONS_BOT_TOKEN,
           middlewares: [sessionMiddleware, commandWithArgsMiddleware],
           include: [TelegramBotModule]
         };
